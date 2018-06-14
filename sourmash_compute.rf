@@ -35,6 +35,10 @@ param (
 
     // Number of hashes to use in each sketch
     num_hashes = 500
+
+    // If true, remove low abundance (probably erroneous) kmers before computing signature
+    // Usually good practice
+    trim_low_abundance_kmers = true
 )
 
 
@@ -106,9 +110,15 @@ func Trim(r1, r2 [file]) =
 //   --seed SEED           seed used by MurmurHash (default: 42)
 //   --randomize           shuffle the list of input filenames randomly
 //   --license LICENSE     signature license. Currently only CC0 is supported.
-func Compute(trimmed file, name, ksizes string) = 
+func ComputeTrimmed(trimmed file, name, ksizes string) = 
 	exec(image := sourmash, mem := 4*GiB, cpu := 2) (signature file) {"
 		/home/main/anaconda2/bin/sourmash compute --track-abundance --protein --dna --ksizes {{ksizes}} --name {{name}} --output {{signature}} {{trimmed}}
+"}
+
+
+func ComputeUntrimmed(r1, r2 [file], name, ksizes string) = 
+    exec(image := sourmash, mem := 4*GiB, cpu := 2) (signature file) {"
+        /home/main/anaconda2/bin/sourmash compute --track-abundance --protein --dna --ksizes {{ksizes}} --name {{name}} --output {{signature}} {{r1}} {{r2}}
 "}
 
 // Split each read string by the pipe "|" to get individual s3 paths
@@ -120,8 +130,11 @@ val read2s = strings.Split(read2, "|")
 val r1 = [file(read1) | read1 <- read1s]
 val r2 = [file(read2) | read2 <- read2s]
 
-
-val trimmed = Trim(r1, r2)
-val signature = Compute(trimmed, name, ksizes)
+if trim_low_abundance_kmers {
+    val trimmed = Trim(r1, r2)
+    val signature = ComputeTrimmed(trimmed, name, ksizes)    
+} else {
+    val signature = ComputeUntrimmed(r1, r2, name, ksizes)
+}
 
 val Main = files.Copy(signature, output_signature)
