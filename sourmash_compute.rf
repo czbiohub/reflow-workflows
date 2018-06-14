@@ -61,7 +61,7 @@ val strings = make("$/strings")
 // the -M parameter to use more memory.
 func Trim(r1, r2 [file]) =
     exec(image := sourmash, mem := 4*GiB) (trimmed file) {"
-        trim-low-abund.py --cutoff 3 --trim-at-coverage 18 --variable-coverage --max-memory-usage 4e9 --output {{trimmed}} {{r1}} {{r2}}
+        /home/main/anaconda2/bin/trim-low-abund.py --cutoff 3 --trim-at-coverage 18 --variable-coverage --max-memory-usage 4e9 --output {{trimmed}} {{r1}} {{r2}}
 "}
 
 
