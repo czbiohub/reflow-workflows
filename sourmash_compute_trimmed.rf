@@ -125,7 +125,7 @@ val read2s = strings.Split(read2, "|")
 val r1 = [file(read1) | read1 <- read1s]
 val r2 = [file(read2) | read2 <- read2s]
 
-trimmed, tempdir := Trim(r1, r2)
+val (trimmed, tempdir) = Trim(r1, r2)
 val signature = ComputeTrimmed(trimmed, name, ksizes)    
 
 
