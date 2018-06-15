@@ -99,7 +99,7 @@ val strings = make("$/strings")
 
 func ComputeUntrimmed(r1, r2 [file], name, ksizes string) = 
     exec(image := sourmash, mem := 4*GiB, cpu := 2) (signature file) {"
-        /home/main/anaconda2/bin/sourmash compute --track-abundance --protein --dna --ksizes {{ksizes}} --name {{name}} --output {{signature}} {{r1}} {{r2}}
+        /opt/conda/bin/sourmash compute --track-abundance --protein --dna --ksizes {{ksizes}} --name {{name}} --output {{signature}} {{r1}} {{r2}}
 "}
 
 // Split each read string by the pipe "|" to get individual s3 paths
