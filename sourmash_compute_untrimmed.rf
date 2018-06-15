@@ -51,17 +51,6 @@ val files = make("$/files")
 val strings = make("$/strings")
 
 
-// Trim low-abundance kmers (probably erroneous)
-// This is safe to use on genomes, metagenomes, and transcriptomes. If you are 
-// working with large genomes or diverse metagenomes, you may need to increase 
-// the -M parameter to use more memory.
-func Trim(r1, r2 [file]) =
-    exec(image := sourmash, mem := 4*GiB) (trimmed file) {"
-        /home/main/anaconda2/bin/trim-low-abund.py --cutoff 3 --trim-at-coverage 18 --variable-coverage --max-memory-usage 4e9 --output {{trimmed}} {{r1}} {{r2}}
-"}
-
-
-
 // Compute a minhash signature for a sample
 // main@53b01df97926:/home$ sourmash compute --help
 // usage: sourmash [-h] [--protein] [--no-protein] [--dna] [--no-dna] [-q]
