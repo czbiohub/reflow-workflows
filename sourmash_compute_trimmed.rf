@@ -60,8 +60,8 @@ val strings = make("$/strings")
 // working with large genomes or diverse metagenomes, you may need to increase 
 // the -M parameter to use more memory.
 func Trim(r1, r2 [file]) =
-    exec(image := sourmash, mem := 4*GiB) (trimmed file) {"
-        /home/main/anaconda2/bin/trim-low-abund.py --cutoff 3 --trim-at-coverage 18 --variable-coverage --max-memory-usage 4e9 --output {{trimmed}} {{r1}} {{r2}}
+    exec(image := sourmash, mem := 2*GiB) (trimmed file, temp dir) {"
+        /home/main/anaconda2/bin/trim-low-abund.py --cutoff 3 --trim-at-coverage 18 --variable-coverage --max-memory-usage 2e9 --tempdir {{temp}} --output {{trimmed}} {{r1}} {{r2}}
 "}
 
 
@@ -125,7 +125,7 @@ val read2s = strings.Split(read2, "|")
 val r1 = [file(read1) | read1 <- read1s]
 val r2 = [file(read2) | read2 <- read2s]
 
-val trimmed = Trim(r1, r2)
+val trimmed, _ = Trim(r1, r2)
 val signature = ComputeTrimmed(trimmed, name, ksizes)    
 
 
