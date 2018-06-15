@@ -38,7 +38,7 @@ param (
 )
 
 
-val sourmash = "czbiohub/sourmash"
+val sourmash = "czbiohub/kmer-hashing"
 
 // Instantiate the system modules "files" (system modules begin
 // with $), assigning its instance to the "files" identifier. To
