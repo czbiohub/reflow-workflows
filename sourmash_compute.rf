@@ -130,11 +130,11 @@ val read2s = strings.Split(read2, "|")
 val r1 = [file(read1) | read1 <- read1s]
 val r2 = [file(read2) | read2 <- read2s]
 
-if trim_low_abundance_kmers {
-    val trimmed = Trim(r1, r2)
-    val signature = ComputeTrimmed(trimmed, name, ksizes)    
+if (trim_low_abundance_kmers) {
+    trimmed := Trim(r1, r2)
+    signature := ComputeTrimmed(trimmed, name, ksizes)    
 } else {
-    val signature = ComputeUntrimmed(r1, r2, name, ksizes)
+    signature := ComputeUntrimmed(r1, r2, name, ksizes)
 }
 
 val Main = files.Copy(signature, output_signature)
