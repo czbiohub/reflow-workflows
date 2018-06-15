@@ -1,0 +1,127 @@
+
+param (
+    // Example: reflow run sourmash.rf \
+    //    -read1=s3://czbiohub-maca/remux_data/170907_A00111_0051_BH2HWLDMXX/rawdata/N8-MAA000612-3_9_M-1-1_S36/N8-MAA000612-3_9_M-1-1_S36_R1_001.fastq.gz \
+    //    -read2=s3://czbiohub-maca/remux_data/170907_A00111_0051_BH2HWLDMXX/rawdata/N8-MAA000612-3_9_M-1-1_S36/N8-MAA000612-3_9_M-1-1_S36_R2_001.fastq.gz \
+    //    -name=N8-MAA000612-3_9_M-1-1_S36 \
+    //    -output_signature=s3://olgabot-maca/facs/sourmash/N8-MAA000612-3_9_M-1-1_S36.signature
+
+    // S3 path to read1 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read1 string
+
+    // S3 path to read2 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read2 string
+
+    // Identifier of the sample
+    name string
+
+    // Full s3 file location to put the sourmash signature
+    output_signature string
+
+    // Size of kmer(s) to use
+    ksizes = "21,33,51"
+
+    // Whether or not to translate the sequence into protein and build the signature off of the protein sequence
+    // Note: The kmer size(s) must then be divisible by 3
+    build_protein_signature = true
+
+    // Whether or not to build the signature off of the DNA sequence
+    build_dna_signature = true
+
+    // Indicates whether intput sequence is amino acid sequence rather than nucleotide
+    input_is_protein = false
+
+    // Number of hashes to use in each sketch
+    num_hashes = 500
+)
+
+
+val sourmash = "czbiohub/sourmash"
+
+// Instantiate the system modules "files" (system modules begin
+// with $), assigning its instance to the "files" identifier. To
+// view the documentation for this module, run "reflow doc
+// $/files".
+val files = make("$/files")
+
+
+// Instantiate system module "strings"
+val strings = make("$/strings")
+
+
+// Trim low-abundance kmers (probably erroneous)
+// This is safe to use on genomes, metagenomes, and transcriptomes. If you are 
+// working with large genomes or diverse metagenomes, you may need to increase 
+// the -M parameter to use more memory.
+func Trim(r1, r2 [file]) =
+    exec(image := sourmash, mem := 4*GiB) (trimmed file) {"
+        /home/main/anaconda2/bin/trim-low-abund.py --cutoff 3 --trim-at-coverage 18 --variable-coverage --max-memory-usage 4e9 --output {{trimmed}} {{r1}} {{r2}}
+"}
+
+
+
+// Compute a minhash signature for a sample
+// main@53b01df97926:/home$ sourmash compute --help
+// usage: sourmash [-h] [--protein] [--no-protein] [--dna] [--no-dna] [-q]
+//                 [--input-is-protein] [-k KSIZES] [-n NUM_HASHES]
+//                 [--check-sequence] [-f] [-o OUTPUT] [--singleton]
+//                 [--merge MERGED] [--name-from-first] [--track-abundance]
+//                 [--scaled SCALED] [--seed SEED] [--randomize]
+//                 [--license LICENSE]
+//                 filenames [filenames ...]
+
+// positional arguments:
+//   filenames             file(s) of sequences
+
+// optional arguments:
+//   -h, --help            show this help message and exit
+//   --protein             build protein signatures (default: False)
+//   --no-protein          do not build protein signatures
+//   --dna                 build DNA signatures (default: True)
+//   --no-dna              do not build DNA signatures
+//   -q, --quiet           suppress non-error output
+//   --input-is-protein    Consume protein sequences - no translation needed.
+//   -k KSIZES, --ksizes KSIZES
+//                         comma-separated list of k-mer sizes (default:
+//                         21,31,51)
+//   -n NUM_HASHES, --num-hashes NUM_HASHES
+//                         number of hashes to use in each sketch (default: 500)
+//   --check-sequence      complain if input sequence is invalid (default: False)
+//   -f, --force           recompute signatures even if the file exists (default:
+//                         False)
+//   -o OUTPUT, --output OUTPUT
+//                         output computed signatures to this file
+//   --singleton           compute a signature for each sequence record
+//                         individually (default: False)
+//   --merge MERGED, --name MERGED
+//                         merge all input files into one signature named this
+//   --name-from-first     name the signature generated from each file after the
+//                         first record in the file (default: False)
+//   --track-abundance     track k-mer abundances in the generated signature
+//                         (default: False)
+//   --scaled SCALED       choose number of hashes as 1 in FRACTION of input
+//                         k-mers
+//   --seed SEED           seed used by MurmurHash (default: 42)
+//   --randomize           shuffle the list of input filenames randomly
+//   --license LICENSE     signature license. Currently only CC0 is supported.
+
+
+func ComputeUntrimmed(r1, r2 [file], name, ksizes string) = 
+    exec(image := sourmash, mem := 4*GiB, cpu := 2) (signature file) {"
+        /home/main/anaconda2/bin/sourmash compute --track-abundance --protein --dna --ksizes {{ksizes}} --name {{name}} --output {{signature}} {{r1}} {{r2}}
+"}
+
+// Split each read string by the pipe "|" to get individual s3 paths
+val read1s = strings.Split(read1, "|")
+val read2s = strings.Split(read2, "|")
+
+// Create a file for each element in the `read1s`, `read2s` string array
+// Now `r1`, `r1` are arrays of files
+val r1 = [file(read1) | read1 <- read1s]
+val r2 = [file(read2) | read2 <- read2s]
+
+val signature = ComputeUntrimmed(r1, r2, name, ksizes)
+
+val Main = files.Copy(signature, output_signature)
