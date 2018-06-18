@@ -1,11 +1,4 @@
-
 param (
-    // Example: reflow run sourmash.rf \
-    //    -read1=s3://czbiohub-maca/remux_data/170907_A00111_0051_BH2HWLDMXX/rawdata/N8-MAA000612-3_9_M-1-1_S36/N8-MAA000612-3_9_M-1-1_S36_R1_001.fastq.gz \
-    //    -read2=s3://czbiohub-maca/remux_data/170907_A00111_0051_BH2HWLDMXX/rawdata/N8-MAA000612-3_9_M-1-1_S36/N8-MAA000612-3_9_M-1-1_S36_R2_001.fastq.gz \
-    //    -name=N8-MAA000612-3_9_M-1-1_S36 \
-    //    -output_signature=s3://olgabot-maca/facs/sourmash/N8-MAA000612-3_9_M-1-1_S36.signature
-
     // S3 path to read1 of the fastq/fasta file. If multiple files, 
     // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
     read1 string
@@ -23,19 +16,6 @@ param (
     // Size of kmer(s) to use
     ksizes = "21,33,51"
 
-    // Whether or not to translate the sequence into protein and build the signature off of the protein sequence
-    // Note: The kmer size(s) must then be divisible by 3
-    build_protein_signature = true
-
-    // Whether or not to build the signature off of the DNA sequence
-    build_dna_signature = true
-
-    // Indicates whether intput sequence is amino acid sequence rather than nucleotide
-    input_is_protein = false
-
-    // Number of hashes to use in each sketch
-    num_hashes = 500
-
     // If true, remove low abundance (probably erroneous) kmers before computing signature
     // Usually good practice
     trim_low_abundance_kmers = true
@@ -43,16 +23,6 @@ param (
 
 
 val sourmash = "czbiohub/kmer-hashing"
-
-// Instantiate the system modules "files" (system modules begin
-// with $), assigning its instance to the "files" identifier. To
-// view the documentation for this module, run "reflow doc
-// $/files".
-val files = make("$/files")
-
-
-// Instantiate system module "strings"
-val strings = make("$/strings")
 
 
 // Trim low-abundance kmers (probably erroneous)
@@ -141,6 +111,16 @@ func ComputeUntrimmed(r1, r2 [file], name, ksizes string) =
 "}
 
 
+
+// Instantiate the system modules "files" (system modules begin
+// with $), assigning its instance to the "files" identifier. To
+// view the documentation for this module, run "reflow doc
+// $/files".
+val files = make("$/files")
+
+// Instantiate Go system module "strings"
+val strings = make("$/strings")
+
 // Split each read string by the pipe "|" to get individual s3 paths
 val read1s = strings.Split(read1, "|")
 val read2s = strings.Split(read2, "|")
@@ -156,6 +136,5 @@ val signature = if trim_low_abundance_kmers {
 } else {
     ComputeUntrimmed(r1, r2, name, ksizes)
 }
-
 
 val Main = files.Copy(signature, output_signature)
