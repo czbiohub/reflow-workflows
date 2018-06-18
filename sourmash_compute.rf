@@ -61,7 +61,13 @@ val strings = make("$/strings")
 // the -M parameter to use more memory.
 func Trim(r1, r2 [file]) =
     exec(image := sourmash, mem := 2*GiB) (trimmed file) {"
-        /opt/conda/bin/trim-low-abund.py --cutoff 3 --trim-at-coverage 18 --variable-coverage --max-memory-usage 2e9 --output {{trimmed}} {{r1}} {{r2}}
+        /opt/conda/bin/trim-low-abund.py \
+            --cutoff 3 \
+            --trim-at-coverage 18 \
+            --variable-coverage \
+            --max-memory-usage 2e9 \
+            --output {{trimmed}} \
+            {{r1}} {{r2}}
 "}
 
 
@@ -112,12 +118,26 @@ func Trim(r1, r2 [file]) =
 //   --license LICENSE     signature license. Currently only CC0 is supported.
 func ComputeTrimmed(trimmed file, name, ksizes string) = 
 	exec(image := sourmash, mem := 4*GiB, cpu := 2) (signature file) {"
-		/usr/local/bin/sourmash compute --track-abundance --protein --dna --ksizes {{ksizes}} --name {{name}} --output {{signature}} {{trimmed}}
+		/opt/conda/bin/sourmash compute \
+            --track-abundance \
+            --protein \
+            --dna \
+            --ksizes {{ksizes}} \
+            --name {{name}} \
+            --output {{signature}} \
+            {{trimmed}}
 "}
 
 func ComputeUntrimmed(r1, r2 [file], name, ksizes string) = 
     exec(image := sourmash, mem := 4*GiB, cpu := 2) (signature file) {"
-        /usr/local/bin/sourmash compute --track-abundance --protein --dna --ksizes {{ksizes}} --name {{name}} --output {{signature}} {{r1}} {{r2}}
+        /opt/conda/bin/sourmash compute \
+            --track-abundance \
+            --protein \
+            --dna \
+            --ksizes {{ksizes}} \
+            --name {{name}} \
+            --output {{signature}} \
+            {{r1}} {{r2}}
 "}
 
 
