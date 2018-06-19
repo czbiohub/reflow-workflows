@@ -11,7 +11,7 @@ param (
     name string
 
     // Full s3 file location to put the sourmash signature
-    output_signature string
+    output string
 
     // Size of kmer(s) to use
     ksizes = "21,33,51"
