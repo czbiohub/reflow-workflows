@@ -137,4 +137,4 @@ val signature = if trim_low_abundance_kmers {
     ComputeUntrimmed(r1, r2, name, ksizes)
 }
 
-val Main = files.Copy(signature, output_signature)
+val Main = files.Copy(signature, output)
