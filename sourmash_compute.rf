@@ -26,7 +26,7 @@ param (
 
 
 val kmer_hashing = "czbiohub/kmer-hashing"
-val sourmash = "quay.io/biocontainers/sourmash:2.0.0a7--py27_0"
+// val sourmash = "quay.io/biocontainers/sourmash:2.0.0a7--py27_0"
 
 
 // Trim low-abundance kmers (probably erroneous)
@@ -49,8 +49,8 @@ func Trim(r1, r2 [file]) =
 
 // Compute a minhash signature for a sample
 func ComputeTrimmed(trimmed file, name, ksizes string) = 
-	exec(image := sourmash, mem := 4*GiB, cpu := 2) (signature file) {"
-		/usr/local/bin/sourmash compute \
+	exec(image := kmer_hashing, mem := 4*GiB, cpu := 2) (signature file) {"
+		/opt/conda/bin/sourmash compute \
             --track-abundance \
             --protein \
             --dna \
@@ -62,8 +62,8 @@ func ComputeTrimmed(trimmed file, name, ksizes string) =
 "}
 
 func ComputeUntrimmed(r1, r2 [file], name, ksizes string) = 
-    exec(image := sourmash, mem := 4*GiB, cpu := 2) (signature file) {"
-        /usr/local/bin/sourmash compute \
+    exec(image := kmer_hashing, mem := 4*GiB, cpu := 2) (signature file) {"
+        /opt/conda/bin/sourmash compute \
             --track-abundance \
             --protein \
             --dna \
