@@ -54,7 +54,7 @@ func ComputeTrimmed(trimmed file, name, ksizes string) =
             --track-abundance \
             --protein \
             --dna \
-            --scaled {{scaled}}
+            --scaled {{scaled}} \
             --ksizes {{ksizes}} \
             --name {{name}} \
             --output {{signature}} \
@@ -67,7 +67,7 @@ func ComputeUntrimmed(r1, r2 [file], name, ksizes string) =
             --track-abundance \
             --protein \
             --dna \
-            --scaled {{scaled}}
+            --scaled {{scaled}} \
             --ksizes {{ksizes}} \
             --name {{name}} \
             --output {{signature}} \
