@@ -56,7 +56,7 @@ func ComputeTrimmed(trimmed file, name, ksizes string) =
             --dna \
             --scaled {{scaled}} \
             --ksizes {{ksizes}} \
-            --name {{name}} \
+            --merge '{{name}}' \
             --output {{signature}} \
             {{trimmed}}
 "}
@@ -69,7 +69,7 @@ func ComputeUntrimmed(r1, r2 [file], name, ksizes string) =
             --dna \
             --scaled {{scaled}} \
             --ksizes {{ksizes}} \
-            --name {{name}} \
+            --merge '{{name}}' \
             --output {{signature}} \
             {{r1}} {{r2}}
 "}
