@@ -23,7 +23,7 @@ param (
 
 
 val kmer_hashing = "czbiohub/kmer-hashing"
-val sourmash = "quay.io/biocontainers/sourmash:2.0.0a7--py36_0"
+val sourmash = "quay.io/biocontainers/sourmash:2.0.0a7--py27_0"
 
 
 // Trim low-abundance kmers (probably erroneous)
