@@ -19,6 +19,9 @@ param (
     // If true, remove low abundance (probably erroneous) kmers before computing signature
     // Usually good practice
     trim_low_abundance_kmers = true
+
+    // choose number of hashes as 1 in FRACTION of input k-mers
+    scaled = 500
 )
 
 
@@ -51,6 +54,7 @@ func ComputeTrimmed(trimmed file, name, ksizes string) =
             --track-abundance \
             --protein \
             --dna \
+            --scaled {{scaled}}
             --ksizes {{ksizes}} \
             --name {{name}} \
             --output {{signature}} \
@@ -63,6 +67,7 @@ func ComputeUntrimmed(r1, r2 [file], name, ksizes string) =
             --track-abundance \
             --protein \
             --dna \
+            --scaled {{scaled}}
             --ksizes {{ksizes}} \
             --name {{name}} \
             --output {{signature}} \
