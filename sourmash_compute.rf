@@ -22,7 +22,8 @@ param (
 )
 
 
-val sourmash = "czbiohub/kmer-hashing"
+val kmer_hashing = "czbiohub/kmer-hashing"
+val sourmash = "quay.io/biocontainers/sourmash:2.0.0a7--py36_0"
 
 
 // Trim low-abundance kmers (probably erroneous)
@@ -30,7 +31,8 @@ val sourmash = "czbiohub/kmer-hashing"
 // working with large genomes or diverse metagenomes, you may need to increase 
 // the -M parameter to use more memory.
 func Trim(r1, r2 [file]) =
-    exec(image := sourmash, mem := 2*GiB) (trimmed file) {"
+    // Use kmer-hashing image which has latest khmer to avoid bug with basenames in reflow
+    exec(image := kmer_hashing, mem := 2*GiB) (trimmed file) {"
         /opt/conda/bin/trim-low-abund.py \
             --cutoff 3 \
             --trim-at-coverage 18 \
@@ -43,49 +45,6 @@ func Trim(r1, r2 [file]) =
 
 
 // Compute a minhash signature for a sample
-// main@53b01df97926:/home$ sourmash compute --help
-// usage: sourmash [-h] [--protein] [--no-protein] [--dna] [--no-dna] [-q]
-//                 [--input-is-protein] [-k KSIZES] [-n NUM_HASHES]
-//                 [--check-sequence] [-f] [-o OUTPUT] [--singleton]
-//                 [--merge MERGED] [--name-from-first] [--track-abundance]
-//                 [--scaled SCALED] [--seed SEED] [--randomize]
-//                 [--license LICENSE]
-//                 filenames [filenames ...]
-
-// positional arguments:
-//   filenames             file(s) of sequences
-
-// optional arguments:
-//   -h, --help            show this help message and exit
-//   --protein             build protein signatures (default: False)
-//   --no-protein          do not build protein signatures
-//   --dna                 build DNA signatures (default: True)
-//   --no-dna              do not build DNA signatures
-//   -q, --quiet           suppress non-error output
-//   --input-is-protein    Consume protein sequences - no translation needed.
-//   -k KSIZES, --ksizes KSIZES
-//                         comma-separated list of k-mer sizes (default:
-//                         21,31,51)
-//   -n NUM_HASHES, --num-hashes NUM_HASHES
-//                         number of hashes to use in each sketch (default: 500)
-//   --check-sequence      complain if input sequence is invalid (default: False)
-//   -f, --force           recompute signatures even if the file exists (default:
-//                         False)
-//   -o OUTPUT, --output OUTPUT
-//                         output computed signatures to this file
-//   --singleton           compute a signature for each sequence record
-//                         individually (default: False)
-//   --merge MERGED, --name MERGED
-//                         merge all input files into one signature named this
-//   --name-from-first     name the signature generated from each file after the
-//                         first record in the file (default: False)
-//   --track-abundance     track k-mer abundances in the generated signature
-//                         (default: False)
-//   --scaled SCALED       choose number of hashes as 1 in FRACTION of input
-//                         k-mers
-//   --seed SEED           seed used by MurmurHash (default: 42)
-//   --randomize           shuffle the list of input filenames randomly
-//   --license LICENSE     signature license. Currently only CC0 is supported.
 func ComputeTrimmed(trimmed file, name, ksizes string) = 
 	exec(image := sourmash, mem := 4*GiB, cpu := 2) (signature file) {"
 		/opt/conda/bin/sourmash compute \
