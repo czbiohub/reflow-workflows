@@ -35,8 +35,8 @@ val kmer_hashing = "czbiohub/kmer-hashing"
 // val sourmash = "quay.io/biocontainers/sourmash:2.0.0a7--py27_0"
 
 
-protein_flag := if protein { '--protein' } else { '--no-protein' }
-dna_flag := if dna { '--dna' } else { '--no-dna' }
+val protein_flag = if protein { "--protein" } else { "--no-protein" }
+val dna_flag = if dna { "--dna" } else { "--no-dna" }
 
 // Trim low-abundance kmers (probably erroneous)
 // This is safe to use on genomes, metagenomes, and transcriptomes. If you are 
