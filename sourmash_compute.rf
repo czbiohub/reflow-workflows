@@ -22,12 +22,21 @@ param (
 
     // choose number of hashes as 1 in FRACTION of input k-mers
     scaled = 500
+
+    // Calculate protein signature
+    protein = true
+
+    // Calculate DNA signature
+    dna = true
 )
 
 
 val kmer_hashing = "czbiohub/kmer-hashing"
 // val sourmash = "quay.io/biocontainers/sourmash:2.0.0a7--py27_0"
 
+
+protein_flag := if protein { '--protein' } else { '--no-protein' }
+dna_flag := if dna { '--dna' } else { '--no-dna' }
 
 // Trim low-abundance kmers (probably erroneous)
 // This is safe to use on genomes, metagenomes, and transcriptomes. If you are 
@@ -52,8 +61,8 @@ func ComputeTrimmed(trimmed file, name, ksizes string) =
 	exec(image := kmer_hashing, mem := 64*GiB, cpu := 2) (signature file) {"
 		/opt/conda/bin/sourmash compute \
             --track-abundance \
-            --protein \
-            --dna \
+            {{protein_flag}} \
+            {{dna_flag}} \
             --scaled {{scaled}} \
             --ksizes {{ksizes}} \
             --merge '{{name}}' \
@@ -65,8 +74,8 @@ func ComputeUntrimmed(r1, r2 [file], name, ksizes string) =
     exec(image := kmer_hashing, mem := 64*GiB, cpu := 2) (signature file) {"
         /opt/conda/bin/sourmash compute \
             --track-abundance \
-            --protein \
-            --dna \
+            {{protein_flag}} \
+            {{dna_flag}} \
             --scaled {{scaled}} \
             --ksizes {{ksizes}} \
             --merge '{{name}}' \
@@ -101,4 +110,5 @@ val signature = if trim_low_abundance_kmers {
     ComputeUntrimmed(r1, r2, name, ksizes)
 }
 
+@requires(cpu := 2, mem := 64*GiB)
 val Main = files.Copy(signature, output)
