@@ -44,12 +44,12 @@ val dna_flag = if dna { "--dna" } else { "--no-dna" }
 // the -M parameter to use more memory.
 func Trim(r1, r2 [file]) =
     // Use kmer-hashing image which has latest khmer to avoid bug with basenames in reflow
-    exec(image := kmer_hashing, mem := 2*GiB) (trimmed file) {"
+    exec(image := kmer_hashing, mem := 4*GiB) (trimmed file) {"
         /opt/conda/bin/trim-low-abund.py \
             --cutoff 3 \
             --trim-at-coverage 18 \
             --variable-coverage \
-            --max-memory-usage 2e9 \
+            --max-memory-usage 4e9 \
             --output {{trimmed}} \
             {{r1}} {{r2}}
 "}
@@ -58,7 +58,7 @@ func Trim(r1, r2 [file]) =
 
 // Compute a minhash signature for a sample
 func ComputeTrimmed(trimmed file, name, ksizes string) = 
-	exec(image := kmer_hashing, mem := 64*GiB, cpu := 2) (signature file) {"
+	exec(image := kmer_hashing, mem := 4*GiB, cpu := 2) (signature file) {"
 		/opt/conda/bin/sourmash compute \
             --track-abundance \
             {{protein_flag}} \
@@ -71,7 +71,7 @@ func ComputeTrimmed(trimmed file, name, ksizes string) =
 "}
 
 func ComputeUntrimmed(r1, r2 [file], name, ksizes string) = 
-    exec(image := kmer_hashing, mem := 64*GiB, cpu := 2) (signature file) {"
+    exec(image := kmer_hashing, mem := 8*GiB, cpu := 2) (signature file) {"
         /opt/conda/bin/sourmash compute \
             --track-abundance \
             {{protein_flag}} \
