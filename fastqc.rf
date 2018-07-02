@@ -12,7 +12,7 @@ val fastqc = "quay.io/biocontainers/fastqc:0.11.7--4"
 func FastQC(reads [file]) =
     // Use kmer-hashing image which has latest khmer to avoid bug with basenames in reflow
     exec(image := fastqc, mem := 8*GiB, cpu := 4) (outdir dir) {"
-        /usr/local/bin/fastqc -o {{outdir}} --format fastq {{reads}}
+        zcat {{reads}} | /usr/local/bin/fastqc -o {{outdir}} --format fastq stdin
 "}
 
 
