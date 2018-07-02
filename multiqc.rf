@@ -1,0 +1,26 @@
+param (
+    // S3 path to folder of FASTQ or BAM files
+    input string
+
+    // Full s3 file location to put the FastQC report
+    output string
+)
+
+val multiqc = "ewels/multiqc"
+
+func MultiQC(input dir) =
+    exec(image := multiqc, mem := 8*GiB, cpu := 4) (outdir dir) {"
+        /usr/local/bin/multiqc --outdir {{outdir}} {{input}}
+"}
+
+// Instantiate the system modules "dirs" (system modules begin
+// with $), assigning its instance to the "dirs" identifier. To
+// view the documentation for this module, run "reflow doc
+// $/dirs".
+val dirs = make("$/dirs")
+
+data := dir(input)
+
+val report = MultiQC(data)
+
+val Main = dirs.Copy(report, output)
