@@ -110,5 +110,4 @@ val signature = if trim_low_abundance_kmers {
     ComputeUntrimmed(r1, r2, name, ksizes)
 }
 
-@requires(cpu := 2, mem := 64*GiB)
 val Main = files.Copy(signature, output)
