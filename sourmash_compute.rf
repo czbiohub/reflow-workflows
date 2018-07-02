@@ -58,7 +58,7 @@ func Trim(r1, r2 [file]) =
 
 // Compute a minhash signature for a sample
 func ComputeTrimmed(trimmed file, name, ksizes string) = 
-	exec(image := kmer_hashing, mem := 4*GiB, cpu := 4) (signature file) {"
+	exec(image := kmer_hashing) (signature file) {"
 		/opt/conda/bin/sourmash compute \
             --track-abundance \
             {{protein_flag}} \
@@ -71,7 +71,7 @@ func ComputeTrimmed(trimmed file, name, ksizes string) =
 "}
 
 func ComputeUntrimmed(r1, r2 [file], name, ksizes string) = 
-    exec(image := kmer_hashing, mem := 8*GiB, cpu := 4) (signature file) {"
+    exec(image := kmer_hashing) (signature file) {"
         /opt/conda/bin/sourmash compute \
             --track-abundance \
             {{protein_flag}} \
