@@ -1,6 +1,6 @@
 param (
     // S3 path to read1 of the fastq/fasta file. If multiple files, 
-    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    // can be pipe-separated e.g. sample1_01.fastq.gz|sample1_02.fastq.gz
     reads string
 
     // Full s3 file location to put the FastQC report
