@@ -70,6 +70,7 @@ func ComputeTrimmed(trimmed file, name, ksizes string) =
             {{trimmed}}
 "}
 
+@requires()
 func ComputeUntrimmed(r1, r2 [file], name, ksizes string) = 
     exec(image := kmer_hashing) (signature file) {"
         /opt/conda/bin/sourmash compute \
@@ -110,5 +111,5 @@ val signature = if trim_low_abundance_kmers {
     ComputeUntrimmed(r1, r2, name, ksizes)
 }
 
-@requires(cpu := 2)
+@requires(cpu := 2, mem := 4*GiB)
 val Main = files.Copy(signature, output)
