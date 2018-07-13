@@ -6,11 +6,11 @@ param (
 val dirs = make("$/dirs")
 val strings = make("$/strings")
 
-val bcl2fastqimg = "chanzuckerberg/bcl2fastq"
+val bcl2fastqimg = "czbiohub/bcl2fastq"
 val sampleSheet = file(strings.Join(["s3://czbiohub-seqbot/sample-sheets/", runID, ".csv"], ""))
 val bclDir = dir(strings.Join(["s3://czbiohub-seqbot/bcl/", runID], ""))
 
-func bcl2fastq(sampleSheet file, bclPath dir) = 
+func bcl2fastq(sampleSheet file, bclPath dir) =
     exec(image := bcl2fastqimg, mem := 64*GiB) (demuxed dir) {"
         bcl2fastq --no-lane-splitting --sample-sheet {{sampleSheet}} -R {{bclPath}} -o {{demuxed}}
     "}
