@@ -6,6 +6,8 @@ param (
     output string
 )
 
+// Use biohub multiqc which has special config, e.g. 
+// "log.final.out" for STAR instead of "Log.final.out"
 val multiqc = "czbiohub/multiqc"
 
 func MultiQC(input dir) =
