@@ -1,15 +1,15 @@
 param (
-    // S3 path to folder of FASTQ or BAM files
+    // S3 path to folder of FastQC and other reports
     input string
 
-    // Full s3 path location to put the FastQC report, named after the basename of the input file
+    // Full s3 file location to put the combined MultiQC report
     output string
 )
 
-val multiqc = "ewels/multiqc"
+val multiqc = "czbiohub/multiqc"
 
 func MultiQC(input dir) =
-    exec(image := multiqc, mem := 8*GiB, cpu := 4) (outdir dir) {"
+    exec(image := multiqc, cpu := 1) (outdir dir) {"
         /usr/local/bin/multiqc --outdir {{outdir}} {{input}}
 "}
 
@@ -18,7 +18,6 @@ func MultiQC(input dir) =
 // view the documentation for this module, run "reflow doc
 // $/dirs".
 val dirs = make("$/dirs")
-val path = make("$/path")
 
 data := dir(input)
 

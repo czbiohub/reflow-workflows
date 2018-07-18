@@ -1,37 +1,28 @@
 param (
-    // S3 path to read1 of the fastq/fasta file. If multiple files, 
-    // can be pipe-separated e.g. sample1_01.fastq.gz|sample1_02.fastq.gz
+    // S3 path to a single fastq.gz file
     reads string
 
-    // Full s3 file location to put the FastQC report
+    // Full s3 path location to put the FastQC reports
     output string
+
+    // name of the sample
+    id string
 )
 
 val fastqc = "quay.io/biocontainers/fastqc:0.11.7--4"
 
-func FastQC(reads [file]) =
+func FastQC(reads file) =
     // Use kmer-hashing image which has latest khmer to avoid bug with basenames in reflow
-    exec(image := fastqc, mem := 8*GiB, cpu := 4) (outdir dir) {"
-        zcat {{reads}} | /usr/local/bin/fastqc -o {{outdir}} --format fastq stdin
+    exec(image := fastqc, mem := 4*GiB, cpu := 8) (outdir dir) {"
+    	mv {{reads}} {{id}}.fastq.gz
+        /usr/local/bin/fastqc -o {{outdir}} --threads 8 {{id}}.fastq.gz
 "}
 
-
-// Instantiate the system modules "dirs" (system modules begin
-// with $), assigning its instance to the "dirs" identifier. To
-// view the documentation for this module, run "reflow doc
-// $/dirs".
 val dirs = make("$/dirs")
 
-// Instantiate Go system module "strings"
-val strings = make("$/strings")
+val reads_file = file(reads)
 
-// Split each read string by the pipe "|" to get individual s3 paths
-val reads_split = strings.Split(reads, "|")
+val outdir = FastQC(reads_file)
 
-// Create a file for each element in the `read1s`, `read2s` string array
-// Now `r1`, `r1` are arrays of files
-val reads_files = [file(read) | read <- reads_split]
-
-val report = FastQC(reads_files)
-
-val Main = dirs.Copy(report, output)
+@requires(cpu := 1)
+val Main = dirs.Copy(outdir, output)
