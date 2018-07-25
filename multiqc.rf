@@ -1,28 +1,19 @@
 param (
-    // S3 path to folder of FastQC and other reports
-    input string
-
-    // Full s3 file location to put the combined MultiQC report
-    output string
+    fastqc_dir string	// S3 path to folder of FastQC and other reports
+    outdir string   // S3 path to location to put the combined MultiQC report
 )
 
+val dirs = make("$/dirs")
 // Use biohub multiqc which has special config, e.g. 
 // "log.final.out" for STAR instead of "Log.final.out"
 val multiqc = "czbiohub/multiqc"
 
 func MultiQC(input dir) =
-    exec(image := multiqc, cpu := 1) (outdir dir) {"
-        /usr/local/bin/multiqc --outdir {{outdir}} {{input}}
+    exec(image := multiqc, cpu := 1) (out dir) {"
+        /usr/local/bin/multiqc --outdir {{out}} {{input}}
 "}
 
-// Instantiate the system modules "dirs" (system modules begin
-// with $), assigning its instance to the "dirs" identifier. To
-// view the documentation for this module, run "reflow doc
-// $/dirs".
-val dirs = make("$/dirs")
+val report = MultiQC(dir(fastqc_dir))
 
-data := dir(input)
-
-val report = MultiQC(data)
-
-val Main = dirs.Copy(report, output)
+@requires(cpu := 1)
+val Main = dirs.Copy(report, outdir)

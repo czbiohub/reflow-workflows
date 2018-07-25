@@ -1,27 +1,19 @@
 param (
-    // S3 path to a single fastq.gz file
-    reads string
-
-    // Full s3 path location to put the FastQC reports
-    output string
-
-    // name of the sample
-    id string
+    read_fastq string  // S3 path to a single fastq.gz file
+    outdir string      // S3 path to a location to put the FastQC reports
+    id string		   // name of the sample
 )
 
-val fastqc = "quay.io/biocontainers/fastqc:0.11.7--4"
+val dirs = make("$/dirs")
+val docker_image = "quay.io/biocontainers/fastqc:0.11.7--4"
 
-func FastQC(reads file) =
-    exec(image := fastqc, mem := 4*GiB, cpu := 8) (outdir dir) {"
-    	mv {{reads}} {{id}}.fastq.gz
-        /usr/local/bin/fastqc -o {{outdir}} --threads 8 {{id}}.fastq.gz
+func FastQC(reads file, id string) dir =
+	d := dirs.Make([id+".fastq.gz": reads])
+    exec(image := docker_image, mem := 4*GiB, cpu := 8) (out dir) {"
+        /usr/local/bin/fastqc -o {{out}} --threads 8 {{d}}/{{id}}.fastq.gz
 "}
 
-val dirs = make("$/dirs")
-
-val reads_file = file(reads)
-
-val outdir = FastQC(reads_file)
+val fastqc_res = FastQC(file(read_fastq), id)
 
 @requires(cpu := 1)
-val Main = dirs.Copy(outdir, output)
+val Main = dirs.Copy(fastqc_res, outdir)
