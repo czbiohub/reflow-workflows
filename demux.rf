@@ -11,15 +11,11 @@ param (
     // if set, run bcl2fastq with no lane splitting, only applies to bcl2fastq (not 10x)
     no_lane_splitting = false
 
-    // if > 0, signifies batch run: ignore Undetermined reads and save Reports/ 
-    // and Stats/ to different path, only applies to bcl2fastq (not 10x)
-    batch_runID = 0
-
     // if set, use 10x cellranger to demux
     cellranger = false
 
     // czbiohub docker image containing bcl2fastq and cellranger
-    docker_image = "czbiohub/demuxer" 
+    docker_image = "czbiohub/demuxer"
 )
 
 val dirs = make("$/dirs")
@@ -27,7 +23,7 @@ val strings = make("$/strings")
 val path = make("$/path")
 
 // bcl2fastq behavioral options:
-// --adapter-stringency 
+// --adapter-stringency
 // --barcode-mismatches
 // --create-fastq-for-indexreads
 // --ignore-missing-bcls
@@ -37,11 +33,11 @@ val path = make("$/path")
 // --mask-short-adapter-reads
 // --tiles
 // --use-bases-mask
-// --with-failed-reads 
+// --with-failed-reads
 // --write-fastq-reversecomplement
-// --no-bgzf-compression 
+// --no-bgzf-compression
 // --fastq-compression-level
-// --no-lane-splitting 
+// --no-lane-splitting
 // --find-adapters-withsliding-window
 
 // Runs bcl2fastq with --no-lane-splitting option.
@@ -64,16 +60,9 @@ func modifyDirectories(filename string, id int) string = {
         remaining := [fullPath[i]| i <- range(1, len(fullPath))]
         remainingPath := path.Join(remaining)
         path.Join([fullPath[0], strings.FromInt(id), remainingPath])
-    } else { 
-        filename 
+    } else {
+        filename
     }
-}
-
-// Removes Undetermined files and prevents overwriting of Reports/ and Stats/ in batch runs.
-func fixBatchResults(demuxed dir, id int) dir = {
-    noUndetermined := [(n, f)| (n, f) <- map(demuxed), if !strings.HasPrefix(n, "Undetermined")]
-    fixedStatsAndReports := [(modifyDirectories(n, id), f)| (n, f) <- noUndetermined]
-    dirs.Make(map(fixedStatsAndReports))
 }
 
 // bcl2fastq wrapper. Takes care of the -no-lane-splitting and -batch_runID flags.
@@ -84,20 +73,14 @@ func bcl2fastqRun(samplesheet file, bcl_dir dir) dir = {
         bcl2fastq_split(samplesheet, bcl_dir)
     }
 
-    val fastq_output = if batch_runID > 0 {
-        fixBatchResults(demuxed_output, batch_runID)
-    } else {
-        demuxed_output
-    }
-
-    fastq_output
+    demuxed_output
 }
 
 // Runs 10x cellranger.
 
 func cellRangerRun(samplesheet file, bcl_dir dir) =
     exec(image := docker_image, cpu := 32,  mem := 256*GiB) (out dir) {"
-        cellranger mkfastq --localmem=60 --sample-sheet {{samplesheet}} --run {{bcl_dir}} --output-dir {{out}}
+        cellranger mkfastq --localmem=250 --sample-sheet {{samplesheet}} --run {{bcl_dir}} --output-dir {{out}}
     "}
 
 @requires(cpu := 32, mem := 256*GiB, disk := 4000*GiB)
