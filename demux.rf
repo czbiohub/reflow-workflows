@@ -46,13 +46,13 @@ val path = make("$/path")
 
 // Runs bcl2fastq with --no-lane-splitting option.
 func bcl2fastq_no_split(samplesheet file, bcl_dir dir) =
-    exec(image := docker_image, mem := 64*GiB) (out dir) {"
+    exec(image := docker_image, cpu := 32, mem := 256*GiB) (out dir) {"
         bcl2fastq --no-lane-splitting --sample-sheet {{samplesheet}} -R {{bcl_dir}} -o {{out}}
     "}
 
 // Runs bcl2fastq with lane splitting.
 func bcl2fastq_split(samplesheet file, bcl_dir dir) =
-    exec(image := docker_image, mem := 64*GiB) (out dir) {"
+    exec(image := docker_image, cpu := 32, mem := 256*GiB) (out dir) {"
         bcl2fastq --sample-sheet {{samplesheet}} -R {{bcl_dir}} -o {{out}}
     "}
 
@@ -94,12 +94,13 @@ func bcl2fastqRun(samplesheet file, bcl_dir dir) dir = {
 }
 
 // Runs 10x cellranger.
+
 func cellRangerRun(samplesheet file, bcl_dir dir) =
-    exec(image := docker_image, mem := 64*GiB) (out dir) {"
+    exec(image := docker_image, cpu := 32,  mem := 256*GiB) (out dir) {"
         cellranger mkfastq --localmem=60 --sample-sheet {{samplesheet}} --run {{bcl_dir}} --output-dir {{out}}
     "}
 
-@requires(cpu := 8, mem := 32*GiB, disk := 200*GiB)
+@requires(cpu := 32, mem := 256*GiB, disk := 4000*GiB)
 val Main = {
     samplesheet := file(samplesheet)
     bcl_dir := dir(bcl_path)
