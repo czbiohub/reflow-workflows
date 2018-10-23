@@ -1,7 +1,7 @@
 val dirs = make("$/dirs")
 
 // Local pacakges
-val samtools = make("$/samtools.rf")
+val samtools = make("./samtools.rf")
 
 star := "darcyabjones/star"
 htseq := "sleight82/htseq-count"
