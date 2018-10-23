@@ -19,7 +19,7 @@ param (
     // Read group Library
     library = "unspecified"
 
-    // GiB of memory for picard GatherBamFiles
+    // GiB of memory for samtools cat
     gather_mem = 16
 )
 
@@ -53,7 +53,7 @@ val sample_names_str = strings.Split(sample_names, "|")
 // Add sample ids to the read groups
 val bam_files_with_read_groups = [AddOrReplaceReadGroups(bam, name) | (bam, name) <- zip(bam_files, sample_names_str)] 
 
-val gathered_bam = samtools.Cat(bam_files_with_read_groups)
+val gathered_bam = samtools.Cat(bam_files_with_read_groups, gather_mem)
 val sorted_bam = samtools.Sort(gathered_bam)
 val index = samtools.Index(sorted_bam)
 

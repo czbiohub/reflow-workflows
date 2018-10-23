@@ -19,8 +19,8 @@ func SortByName(sorted file) =
 
 
 // Merge many bam files into one, using samtools
-func Cat(input_bams [file]) = 
-    exec(image := samtools, mem := gather_mem*GiB) (gathered_bam file) {"
+func Cat(input_bams [file], memory int) = 
+    exec(image := samtools, mem := memory*GiB) (gathered_bam file) {"
         samtools cat -o {{gathered_bam}} {{input_bams}}
 "}
 
