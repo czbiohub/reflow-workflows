@@ -1,7 +1,9 @@
 val dirs = make("$/dirs")
 
+// Local pacakges
+val samtools = make("$/samtools.rf")
+
 star := "darcyabjones/star"
-samtools := "biocontainers/samtools"
 htseq := "sleight82/htseq-count"
 
 func starIndex(genome file) (out dir) =
@@ -37,20 +39,6 @@ func starAlign(fastq file, genomeDir dir) =
             --readFilesIn {{fastq}}
     "}
 
-func samSort(aligned file) =
-    exec (image := samtools, mem := GiB) (sorted file) {"
-        samtools sort -m 6000000000 -o {{sorted}} {{aligned}}
-    "}
-
-func samIndex(sorted file) =
-    exec(image := samtools, mem := GiB) (index file) {"
-        samtools index -b {{sorted}} {{index}}
-    "}
-
-func samSortByName(sorted file) =
-    exec(image := samtools, mem := GiB) (byname file) {"
-        samtools sort -m 5000000000 -n -o {{byname}} {{sorted}}
-    "}
 
 func htseqCount(byName, gtf file) =
    exec(image := htseq, mem := GiB) (counts file) {"
@@ -65,8 +53,8 @@ val Main = {
     val index = starIndex(hg38)
     val output = starAlign(fastq, index)
     val (aligned, _) = dirs.Pick(output, "Aligned.out.bam")
-    val sorted = samSort(aligned)
-    val index = samIndex(sorted)
-    val byName = samSortByName(sorted)
+    val sorted = samtools.Sort(aligned)
+    val index = samtools.Index(sorted)
+    val byName = samtools.SortByName(sorted)
     htseqCount(byName, hg38Gtf)
 }

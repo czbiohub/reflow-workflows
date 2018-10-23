@@ -25,7 +25,6 @@ param (
 
 // Docker images
 val picard = "quay.io/biocontainers/picard:2.18.14--0"
-val samtools = "quay.io/biocontainers/samtools:1.9--h8ee4bcc_1"
 
 
 // System modules included with Reflow
@@ -35,6 +34,7 @@ val strings = make("$/strings")
 
 // Import local module "utils"
 val utils = make("./utils.rf")
+val samtools = make("./samtools.rf")
 
 // Add sample name and other information to each bam file
 func AddOrReplaceReadGroups(input_bam file, sample_name string) =
@@ -46,27 +46,6 @@ func AddOrReplaceReadGroups(input_bam file, sample_name string) =
 "}
 
 
-// // Merge many bam files into one
-// func GatherBamFiles(input_bams [file]) = {
-//     val renamed = [(strings.FromInt(i)+".bam", f) | (i, f) <- zip(range(0, len(input_bams)), input_bams)]
-//     val d = dirs.Make(map(renamed))
-
-//     val inputs = ["I=" + key | (key, value) <- renamed]
-// 	exec(image := picard, mem := gather_mem*GiB) (gathered_bam file) {"
-//         cd {{d}}
-// 		picard GatherBamFiles {{inputs}} O={{gathered_bam}}
-//     "}
-// }
-
-
-// Merge many bam files into one, using samtools
-func SamtoolsCat(input_bams [file]) = 
-    exec(image := samtools, mem := gather_mem*GiB) (gathered_bam file) {"
-        samtools cat -o {{gathered_bam}} {{input_bams}}
-"}
-
-
-
 // Split each bam string by the pipe "|" to get individual s3 paths
 val bam_files = utils.SplitByPipe(bams)
 val sample_names_str = strings.Split(sample_names, "|")
@@ -74,6 +53,8 @@ val sample_names_str = strings.Split(sample_names, "|")
 // Add sample ids to the read groups
 val bam_files_with_read_groups = [AddOrReplaceReadGroups(bam, name) | (bam, name) <- zip(bam_files, sample_names_str)] 
 
-val gathered_bam = SamtoolsCat(bam_files_with_read_groups)
+val gathered_bam = samtools.Cat(bam_files_with_read_groups)
+val sorted_bam = samtools.Sort(gathered_bam)
+val index = samtools.Index(sorted_bam)
 
 val Main = files.Copy(gathered_bam, output)

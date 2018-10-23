@@ -1,0 +1,26 @@
+
+samtools := "biocontainers/samtools"
+
+
+func Sort(aligned file) =
+    exec (image := samtools, mem := GiB) (sorted file) {"
+        samtools sort -m 6000000000 -o {{sorted}} {{aligned}}
+    "}
+
+func Index(sorted file) =
+    exec(image := samtools, mem := GiB) (index file) {"
+        samtools index -b {{sorted}} {{index}}
+    "}
+
+func SortByName(sorted file) =
+    exec(image := samtools, mem := GiB) (byname file) {"
+        samtools sort -m 5000000000 -n -o {{byname}} {{sorted}}
+    "}
+
+
+// Merge many bam files into one, using samtools
+func Cat(input_bams [file]) = 
+    exec(image := samtools, mem := gather_mem*GiB) (gathered_bam file) {"
+        samtools cat -o {{gathered_bam}} {{input_bams}}
+"}
+
