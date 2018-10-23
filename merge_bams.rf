@@ -1,0 +1,79 @@
+param (
+    // S3 path to read1 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    bams string
+
+    // S3 path to read2 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    sample_names string
+
+    // Full s3 file location to put the sourmash signature
+    output string
+
+    // Sequencing platform, e.g. Illumina, SoLiD
+    platform = "Illumina"
+
+    // e.g. run barcode
+    platform_unit = "unspecified"
+
+    // Read group Library
+    library = "unspecified"
+
+    // GiB of memory for picard GatherBamFiles
+    gather_mem = 16
+)
+
+// Docker images
+val picard = "quay.io/biocontainers/picard:2.18.14--0"
+val samtools = "quay.io/biocontainers/samtools:1.9--h8ee4bcc_1"
+
+
+// System modules included with Reflow
+val dirs = make("$/dirs")
+val files = make("$/files")
+val strings = make("$/strings")
+
+// Import local module "utils"
+val utils = make("./utils.rf")
+
+// Add sample name and other information to each bam file
+func AddOrReplaceReadGroups(input_bam file, sample_name string) =
+    exec(image := picard, mem := 8*GiB) (output_bam file) {"
+        picard AddOrReplaceReadGroups \
+            I={{input_bam}} O={{output_bam}} \
+            RGID={{sample_name}} RGLB={{library}} \
+            RGPL={{platform}} RGPU={{platform_unit}} RGSM={{sample_name}}
+"}
+
+
+// // Merge many bam files into one
+// func GatherBamFiles(input_bams [file]) = {
+//     val renamed = [(strings.FromInt(i)+".bam", f) | (i, f) <- zip(range(0, len(input_bams)), input_bams)]
+//     val d = dirs.Make(map(renamed))
+
+//     val inputs = ["I=" + key | (key, value) <- renamed]
+// 	exec(image := picard, mem := gather_mem*GiB) (gathered_bam file) {"
+//         cd {{d}}
+// 		picard GatherBamFiles {{inputs}} O={{gathered_bam}}
+//     "}
+// }
+
+
+// Merge many bam files into one, using samtools
+func SamtoolsCat(input_bams [file]) = 
+    exec(image := samtools, mem := gather_mem*GiB) (gathered_bam file) {"
+        samtools cat -o {{gathered_bam}} {{input_bams}}
+"}
+
+
+
+// Split each bam string by the pipe "|" to get individual s3 paths
+val bam_files = utils.SplitByPipe(bams)
+val sample_names_str = strings.Split(sample_names, "|")
+
+// Add sample ids to the read groups
+val bam_files_with_read_groups = [AddOrReplaceReadGroups(bam, name) | (bam, name) <- zip(bam_files, sample_names_str)] 
+
+val gathered_bam = SamtoolsCat(bam_files_with_read_groups)
+
+val Main = files.Copy(gathered_bam, output)
