@@ -1,0 +1,74 @@
+param (
+    // Can be any of SRR, ERR, PRJNA, or SRX ids. 
+    // Pipe-separate for multiple, e.g. 'SRR1539523|SRR1539569|SRR1539570'
+    sra_id string
+
+    // S3 folder location to put the downloaded files
+    output string
+
+    // GiB of memory for samtools cat
+    fastq_dump_threads = 8
+
+    // GiB of storage for downloading SRA files (per file)
+    sra_disk = 50
+
+    // GiB of storage for converting to fastq.gz files (per file)
+    fastq_dump_disk = 100
+)
+
+// Docker images
+val bionode = "bionode/bionode-ncbi"
+val fastq_dump = "quay.io/biocontainers/parallel-fastq-dump:0.6.3--py36_1"
+
+// System modules included with Reflow
+val dirs = make("$/dirs")
+val files = make("$/files")
+val strings = make("$/strings")
+
+
+func SearchSRA(sra_id string) =
+    exec(image := fastq_dump) (json file) {"
+        bionode-ncbi search sra {{sra_id}} > {{json}}
+"}
+
+
+
+// Outputs a folder with $UID/$SRA.sra, e.g.:
+// $ ls -lha */*.sra
+// -rw-rw-r-- 1 ubuntu ubuntu 3.6G May 16 19:57 285026/SRR629557.sra
+// -rw-rw-r-- 1 ubuntu ubuntu 4.4G May 16 19:59 285027/SRR629559.sra
+// -rw-rw-r-- 1 ubuntu ubuntu 4.0G May 16 20:00 285028/SRR629561.sra
+// -rw-rw-r-- 1 ubuntu ubuntu 1.8G May 16 20:01 285029/SRR629562.sra
+func DownloadSRA(sra_id string) ={
+    outdir := exec(image := fastq_dump, disk := sra_disk*GiB) (outdir dir) {"
+        cd {{outdir}}
+        bionode-ncbi download sra {{sra_id}}
+    "}
+
+    sra_files := dirs.Files(outdir)
+    sra_files
+}
+
+// Convert SRA files to FastQ
+// Recommended flags from https://edwards.sdsu.edu/research/fastq-dump/
+// and Trinity documentation:
+// > If your data come from SRA, be sure to dump the fastq file like so:
+// >    SRA_TOOLKIT/fastq-dump --defline-seq '@$sn[_$rn]/$ri' --split-files file.sra
+func FastqDump(sra file) ={
+    outdir := exec(image := fastq_dump, cpu := fastq_dump_threads, 
+                    disk := fastq_dump_disk*GiB) (outdir dir) {"
+        parallel-fastq-dump --outdir {{outdir}} --gzip \
+            --skip-technical  --readids --read-filter pass \
+            --dumpbase --split-3 --clip --defline-seq '@$sn[_$rn]/$ri' \
+            --split-files --threads {{fastq_dump_threads}} \
+            {{sra}}
+    "}
+    fastqs := dirs.Files(outdir)
+    fastqs
+}
+sra_ids := strings.Split(sra_id, "|")
+sras := flatten([DownloadSRA(sra) | sra <- sra_ids])
+json_metadata := SearchSRA(sra_id)
+fastqs := flatten([FastqDump(sra) | sra <- sras])
+
+val Main = [files.Copy(fastq, output) | fastq <- fastqs]
