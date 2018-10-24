@@ -27,7 +27,7 @@ val strings = make("$/strings")
 
 
 func SearchSRA(sra_id string) =
-    exec(image := fastq_dump) (json file) {"
+    exec(image := bionode) (json file) {"
         bionode-ncbi search sra {{sra_id}} > {{json}}
 "}
 
@@ -40,7 +40,7 @@ func SearchSRA(sra_id string) =
 // -rw-rw-r-- 1 ubuntu ubuntu 4.0G May 16 20:00 285028/SRR629561.sra
 // -rw-rw-r-- 1 ubuntu ubuntu 1.8G May 16 20:01 285029/SRR629562.sra
 func DownloadSRA(sra_id string) ={
-    outdir := exec(image := fastq_dump, disk := sra_disk*GiB) (outdir dir) {"
+    outdir := exec(image := bionode, disk := sra_disk*GiB) (outdir dir) {"
         cd {{outdir}}
         bionode-ncbi download sra {{sra_id}}
     "}
