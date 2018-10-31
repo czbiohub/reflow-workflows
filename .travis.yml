@@ -1,4 +1,4 @@
-language: go
+language: generic
 
 install:
   - wget https://github.com/grailbio/reflow/releases/download/reflow0.6.8/reflow0.6.8.linux.amd64
@@ -6,4 +6,4 @@ install:
   - sudo chmod ugo+x /usr/local/bin/reflow
 
 script:
-  - for rf in $(ls *.rf) ; do reflow doc $rf ; done
+  - make test
