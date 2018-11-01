@@ -13,7 +13,7 @@ param (
     sra_disk = 50
 
     // GiB of storage for converting to fastq.gz files (per file)
-    fastq_dump_disk = 100
+    fastq_dump_disk = 50
 )
 
 // Docker images
