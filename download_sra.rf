@@ -69,7 +69,7 @@ func FastqDump(sra file) ={
 sra_ids := strings.Split(sra_id, "|")
 sras := flatten([DownloadSRA(sra) | sra <- sra_ids])
 json_metadata := SearchSRA(sra_id)
-fastqs := [FastqDump(sra) | sra <- sras]
-to_copy := flatten(fastqs + [json_metadata])
+fastqs := flatten([FastqDump(sra) | sra <- sras])
+to_copy := fastqs + [json_metadata]
 
 val Main = [files.Copy(f, output) | f <- to_copy]
