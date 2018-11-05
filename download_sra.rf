@@ -72,4 +72,5 @@ json_metadata := SearchSRA(sra_id)
 fastqs := flatten([FastqDump(sra) | sra <- sras])
 to_copy := fastqs + [json_metadata]
 
+@requires(cpu := 8)
 val Main = [files.Copy(f, output) | f <- to_copy]
