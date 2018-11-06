@@ -26,9 +26,9 @@ val files = make("$/files")
 val strings = make("$/strings")
 
 
-func SearchSRA(sra_id string) =
+func SearchSRA(id string) =
     exec(image := bionode) (json file) {"
-        bionode-ncbi search sra {{sra_id}} > {{json}}
+        bionode-ncbi search sra '{{id}}' > {{json}}
 "}
 
 
@@ -39,10 +39,10 @@ func SearchSRA(sra_id string) =
 // -rw-rw-r-- 1 ubuntu ubuntu 4.4G May 16 19:59 285027/SRR629559.sra
 // -rw-rw-r-- 1 ubuntu ubuntu 4.0G May 16 20:00 285028/SRR629561.sra
 // -rw-rw-r-- 1 ubuntu ubuntu 1.8G May 16 20:01 285029/SRR629562.sra
-func DownloadSRA(sra_id string) ={
+func DownloadSRA(id string) ={
     outdir := exec(image := bionode, disk := sra_disk*GiB) (outdir dir) {"
         cd {{outdir}}
-        bionode-ncbi download sra {{sra_id}}
+        bionode-ncbi download sra '{{id}}'
     "}
 
     sra_files := dirs.Files(outdir)
@@ -67,10 +67,10 @@ func FastqDump(sra file) ={
     fastqs
 }
 sra_ids := strings.Split(sra_id, "|")
-sras := flatten([DownloadSRA(sra) | sra <- sra_ids])
-json_metadata := SearchSRA(sra_id)
+sras := flatten([DownloadSRA(id) | id <- sra_ids])
+json_metadatas := [SearchSRA(id) | id <- sra_ids])
 fastqs := flatten([FastqDump(sra) | sra <- sras])
-to_copy := fastqs + [json_metadata]
+to_copy := fastqs + json_metadatas
 
 @requires(cpu := 8)
 val Main = [files.Copy(f, output) | f <- to_copy]
