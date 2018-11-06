@@ -55,12 +55,12 @@ func DownloadSRA(sra_id string) ={
 // > If your data come from SRA, be sure to dump the fastq file like so:
 // >    SRA_TOOLKIT/fastq-dump --defline-seq '@$sn[_$rn]/$ri' --split-files file.sra
 func FastqDump(sra file) ={
-    outdir := exec(image := fastq_dump, cpu := fastq_dump_threads, 
+    outdir := exec(image := fastq_dump, cpu := 1, 
                     disk := fastq_dump_disk*GiB) (outdir dir) {"
-        parallel-fastq-dump --outdir {{outdir}} --gzip \
+        fastq-dump --outdir {{outdir}} --gzip \
             --skip-technical  --readids --read-filter pass \
             --dumpbase --split-3 --clip --defline-seq '@$sn[_$rn]/$ri' \
-            --split-files --threads {{fastq_dump_threads}} \
+            --split-files \
             {{sra}}
     "}
     fastqs := dirs.Files(outdir)
