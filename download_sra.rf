@@ -25,6 +25,8 @@ val dirs = make("$/dirs")
 val files = make("$/files")
 val strings = make("$/strings")
 
+// Local library
+val utils = make("./utils.rf")
 
 func SearchSRA(id string) =
     exec(image := bionode) (json file) {"
@@ -74,4 +76,4 @@ fastqs := flatten([FastqDump(sra) | sra <- sras])
 to_copy := fastqs + json_metadatas
 
 @requires(cpu := 8)
-val Main = [utils.CopyRenamedFile(f, id, output, ".fastq.gz") | f, id <- zip(to_copy, sra_ids)]
+val Main = [utils.CopyRenamedFile(f, id, output, ".fastq.gz") | (f, id) <- zip(to_copy, sra_ids)]
