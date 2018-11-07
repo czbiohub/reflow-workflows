@@ -66,14 +66,14 @@ func FastqDump(sra file) ={
             {{sra}}
     "}
     x := trace(outdir)
-    fastqs := dirs.Files(outdir)
-    fastqs
+    outdir
 }
 sra_ids := strings.Split(sra_id, "|")
 sras := flatten([DownloadSRA(id) | id <- sra_ids])
-json_metadatas := [SearchSRA(id) | id <- sra_ids]
-fastqs := flatten([FastqDump(sra) | sra <- sras])
-to_copy := fastqs + json_metadatas
+json_metadatas := [(id+"_metadata.json", SearchSRA(id)) | id <- sra_ids]
+json_dir = dirs.Make(json_metadatas)
+outdirs := [FastqDump(sra) | sra <- sras]
+to_copy := outdirs + [json_dir]
 
 @requires(cpu := 8)
-val Main = [utils.CopyRenamedFile(f, id, output, ".fastq.gz") | (f, id) <- zip(to_copy, sra_ids)]
+val Main = [dirs.Copy(d, output) | d <- to_copy]
