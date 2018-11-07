@@ -63,6 +63,7 @@ func FastqDump(sra file) ={
             --split-files \
             {{sra}}
     "}
+    x := trace(outdir)
     fastqs := dirs.Files(outdir)
     fastqs
 }
