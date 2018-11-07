@@ -1,0 +1,32 @@
+// Instantiate the system modules "dirs" (system modules begin
+// with $), assigning its instance to the "dirs" identifier. To
+// view the documentation for this module, run "reflow doc
+// $/dirs".
+val dirs = make("$/dirs")
+val files = make("$/files")
+val path = make("$/path")
+
+// Instantiate Go system module "strings"
+val strings = make("$/strings")
+
+func CopyRenamedDir(results dir, id, output string) = {                                                                                                                                                                                                                          
+  r := map([(id + "_" + filename, filepointer)| (filename, filepointer) <- map(results)])                                                                                                                                                                                                                       
+  d := dirs.Make(r)                                                                                                                                                                                                                                                           
+  dirs.Copy(d, output)                                                                                                                                                                                                                                                        
+}  
+
+func CopyRenamedFile(results file, id, outdir, suffix string) = {
+	basename := id + suffix
+	renamed := path.Join([outdir, basename])
+	files.Copy(results, renamed)
+}  
+
+func SplitByPipe(pipe_separated string) = {
+	// Split each read string by the pipe "|" to get individual s3 paths
+	val split = strings.Split(pipe_separated, "|")
+
+	// Create a file for each element in the split string array
+	// Now everything is an array of files
+	[file(filename) | filename <- split]
+}
+
