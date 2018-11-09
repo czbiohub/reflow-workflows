@@ -56,7 +56,7 @@ func DownloadSRA(id string) ={
 // and Trinity documentation:
 // > If your data come from SRA, be sure to dump the fastq file like so:
 // >    SRA_TOOLKIT/fastq-dump --defline-seq '@$sn[_$rn]/$ri' --split-files file.sra
-func FastqDump(sra file) ={
+func FastqDump(sra file) = {
     outdir := exec(image := fastq_dump, cpu := 1, 
                     disk := fastq_dump_disk*GiB) (outdir dir) {"
         fastq-dump --outdir {{outdir}} --gzip \
@@ -66,14 +66,40 @@ func FastqDump(sra file) ={
             {{sra}}
     "}
     x := trace(outdir)
-    outdir
+
+    val (singletons, _) = dirs.Pick(outdir, "*pass.fastq.gz")
+    val (R1, _) = dirs.Pick(outdir, "*pass_1.fastq.gz")
+    val (R2, _) = dirs.Pick(outdir, "*pass_2.fastq.gz")
+
+    {singletons, R1, R2}
 }
 sra_ids := strings.Split(sra_id, "|")
-sras := flatten([DownloadSRA(id) | id <- sra_ids])
+
+// Search NCBI and download metadata
 json_metadatas := [(id+"_metadata.json", SearchSRA(id)) | id <- sra_ids]
 json_dir := dirs.Make(map(json_metadatas))
-outdirs := [FastqDump(sra) | sra <- sras]
-to_copy := outdirs + [json_dir]
+
+// Download SRA files
+sras := flatten([DownloadSRA(id) | id <- sra_ids])
+// create Fastq.gz files
+fastqss := [FastqDump(sra) | sra <- sras]
+
+
+func MakeFilename(id, suffix, extension string) =
+    id + "_" + suffix + extension
+
+
+func MakeRenamedFastqs(singletons, R1, R2 file, id, extension string) = {
+    renamed := [MakeFilename(id, "R1", extension): R1,
+                MakeFilename(id, "R2", extension): R2,
+                MakeFilename(id, "singletons", extension): singletons]
+    dirs.Make(renamed)
+}
+
+fastq_dirs := [MakeRenamedFastqs(
+    fastqs.singletons, fastqs.R1, fastqs.R2, id, ".fastq.gz") | (fastqs, id) <- zip(fastqss, sra_ids)]
+
+to_copy := fastq_dirs + [json_dir]
 
 @requires(cpu := 8)
 val Main = [dirs.Copy(d, output) | d <- to_copy]
