@@ -1,5 +1,5 @@
 param (
-    // Can be any of SRR, ERR, PRJNA, or SRX ids. 
+    // Can be any of SRR, ERR, or SRX ids. 
     // Pipe-separate for multiple, e.g. 'SRR1539523|SRR1539569|SRR1539570'
     sra_id string
 
