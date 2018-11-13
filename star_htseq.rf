@@ -101,6 +101,7 @@ val Main = {
     output := "s3://olgabot-maca/star_htseq_test/"
     genome := "mm10-plus"
 
+    output := util.MaybeAddTrailingSlash(output)
 
     r1 := util.SplitByPipe(read1)
     r2 := util.SplitByPipe(read2)
@@ -109,16 +110,16 @@ val Main = {
     val (fasta, gtf) = DecompressReference(reference)
 
     val index = starIndex(fasta, gtf)
-    val alignment_output = starAlign(r1, r2, index)
-    dirs.Copy(alignment_output, output)
+    val alignment_dir = starAlign(r1, r2, index)
     
-    val (aligned, _) = dirs.Pick(alignment_output, "Aligned.out.bam")
+    val (aligned, _) = dirs.Pick(alignment_dir, "*Aligned.out.bam")
     val sorted = samSort(aligned)
     val index = samIndex(sorted)
     val byName = samSortByName(sorted)
     val counts = htseqCount(byName, gtf)
 
-    count_output := output + "htseq-count.txt"
+    count_dir := dirs.Make(["htseq-count.txt": counts])
 
-    // files.Copy(counts, count_output)
+    output_dirs := [alignment_dir, count_dir]
+    [dirs.Copy(d, output) | d <- output_dirs]
 }

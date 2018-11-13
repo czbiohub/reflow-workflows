@@ -6,3 +6,12 @@ func SplitByPipe(read string) = {
 	reads := strings.Split(read, "|")
 	[file(read) | read <- reads]
 }
+
+func MaybeAddTrailingSlash(folder string) = {
+	output := if strings.HasSuffix(folder, "/") {
+        folder + "/" 
+    } else {
+    	folder
+	}
+    output
+}
