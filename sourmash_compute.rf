@@ -21,66 +21,21 @@ param (
     output_signature string
 
     // Size of kmer(s) to use
-    ksizes = "21,31,51"
+    ksizes = "21,33,51"
 
-    // // Whether or not to translate the sequence into protein and build the signature off of the protein sequence
-    // // Note: The kmer size(s) must then be divisible by 3
-    // build_protein_signature = false
+    // Whether or not to translate the sequence into protein and build the signature off of the protein sequence
+    // Note: The kmer size(s) must then be divisible by 3
+    build_protein_signature = true
 
-    // // Whether or not to build the signature off of the DNA sequence
-    // build_dna_signature = true
+    // Whether or not to build the signature off of the DNA sequence
+    build_dna_signature = true
 
-    // // Indicates whether intput sequence is amino acid sequence rather than nucleotide
-    // input_is_protein = false
+    // Indicates whether intput sequence is amino acid sequence rather than nucleotide
+    input_is_protein = false
 
-    // // Number of hashes to use in each sketch
-    // num_hashes = 500
+    // Number of hashes to use in each sketch
+    num_hashes = 500
 )
-
-//	# these are all the TM sequencing folders
-//	S3_FOLDERS = ['170907_A00111_0051_BH2HWLDMXX',
-//	              '170907_A00111_0052_AH2HTCDMXX',
-//	              '170910_A00111_0053_BH2HGKDMXX',
-//	              '170910_A00111_0054_AH2HGWDMXX',
-//	              '170914_A00111_0057_BH3FY7DMXX',
-//	              '170914_A00111_0058_AH3FYKDMXX',
-//	              '170918_A00111_0059_BH3G22DMXX',
-//	              '170918_A00111_0060_AH3FYVDMXX',
-//	              '170921_A00111_0062_BH3FYHDMXX',
-//	              '170921_A00111_0063_AH3G23DMXX',
-//	              '170925_A00111_0066_AH3TKNDMXX',
-//	              '170925_A00111_0067_BH3M5YDMXX',
-//	              '170928_A00111_0068_AH3YKKDMXX',
-//	              '170928_A00111_0069_BH52YMDMXX']
-
-// param (
-//	// sample is the name of the 1000genomes phase 3 sample
-//	sample string
-//
-//	// out is the target of the output merged BAM file
-//	out string
-//)
-// val output = Trim(r1, r2)
-
-// // trim-low-abund.py adds a new file in the same directory with the ending ".abundtrim"
-// // Type is fastq (not fastq.gz) but don't need to specify for sourmash
-// val (trimmed, trimmed_name) = dirs.Pick(output, "*abundtrim")
-// print(trimmed, trimmed_name)
-// val (trim1, _) = dirs.Pick(output, "SRR629563_pass_1.fastq.gz.abundtrim")
-// val (trim2, _) = dirs.Pick(output, "SRR629563_pass_1.fastq.gz.abundtrim")
-
-
-// U-2 OS cell line
-// r1 := file("s3://olgabot-seq2loc/fastq/rnaseq/SRR629563_pass_1.fastq.gz")
-// r2 := file("s3://olgabot-seq2loc/fastq/rnaseq/SRR629563_pass_2.fastq.gz")
-
-// Cells I picked from tabula muris
-// r1 := file("s3://czbiohub-seqbot/fastqs/170907_A00111_0051_BH2HWLDMXX/N8-MAA000612-3_9_M-1-1_S23_R1_001.fastq.gz")
-// r2 := file("s3://czbiohub-seqbot/fastqs/170907_A00111_0051_BH2HWLDMXX/N8-MAA000612-3_9_M-1-1_S23_R2_001.fastq.gz")
-
-// copied to my folder?? -- copy didn't work because they were glaciered
-// r1 := file("s3://olgabot-maca/fastqs/N8-MAA000612-3_9_M-1-1_S23_R1_001.fastq.gz")
-// r2 := file("s3://olgabot-maca-fastqs/N8-MAA000612-3_9_M-1-1_S23_R2_001.fastq.gz")
 
 
 val sourmash = "czbiohub/sourmash"
@@ -141,8 +96,8 @@ val strings = make("$/strings")
 //   --randomize           shuffle the list of input filenames randomly
 //   --license LICENSE     signature license. Currently only CC0 is supported.
 func Compute(r1, r2 [file], name, ksizes string) = 
-	exec(image := sourmash, mem := 4*GiB, cpu := 2) (signature file) {"
-		/home/main/anaconda2/bin/sourmash compute --track-abundance --ksizes {{ksizes}} --name {{name}} --output {{signature}} {{r1}} {{r2}}
+	exec(image := sourmash, mem := GiB) (signature file) {"
+		/home/main/anaconda2/bin/sourmash compute --track-abundance --protein --dna --ksizes {{ksizes}} --name {{name}} --output {{signature}} {{r1}} {{r2}}
 "}
 
 // Split each read string by the pipe "|" to get individual s3 paths
@@ -153,13 +108,6 @@ val read2s = strings.Split(read2, "|")
 // Now `r1`, `r1` are arrays of files
 val r1 = [file(read1) | read1 <- read1s]
 val r2 = [file(read2) | read2 <- read2s]
-
-
-// remuxed data with correct cell names
-// r1 = file(read1)
-// r2 = file(read2)
-
-// out := "s3://olgabot-maca/sourmash/N8-MAA000612-3_9_M-1-1_S36.signature"
 
 
 val signature = Compute(r1, r2, sample_id, ksizes)
