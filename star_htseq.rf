@@ -53,7 +53,7 @@ func starIndex(fasta, gtf file) (out dir) =
     "}
 
 func starAlign(read1, read2 [file], genomeDir dir) = 
-    exec(image := star, mem := 12*GiB) (out dir) {"
+    exec(image := star, mem := 12*GiB, cpu := 12) (out dir) {"
         cd {{out}}
         STAR --outFilterType BySJout \
             --outFilterMultimapNmax 20 \
@@ -74,20 +74,26 @@ func starAlign(read1, read2 [file], genomeDir dir) =
             --readFilesIn {{read1}} {{read2}}
     "}
 
-func samSort(aligned file) =
-    exec (image := samtools, mem := 64*GiB) (sorted file) {"
-        samtools sort -m 60G -o {{sorted}} {{aligned}}
+func samSort(aligned file) = {
+    mem := 10 * len(aligned)
+    command_memory := 9 * len(aligned)
+    exec (image := samtools, mem) (sorted file) {"
+        samtools sort -m {{command_memory}} -o {{sorted}} {{aligned}}
     "}
+}
 
 func samIndex(sorted file) =
     exec(image := samtools, mem := GiB) (index file) {"
         samtools index -b {{sorted}} {{index}}
     "}
 
-func samSortByName(sorted file) =
-    exec(image := samtools, mem := 64*GiB) (byname file) {"
-        samtools sort -m 60G -n -o {{byname}} {{sorted}}
+func samSortByName(sorted file) = {
+    mem := 10 * len(sorted)
+    command_memory := 9 * len(sorted)
+    exec(image := samtools, mem) (byname file) {"
+        samtools sort -m {{command_memory}} -n -o {{byname}} {{sorted}}
     "}
+}
 
 func htseqCount(byName, gtf file) =
    exec(image := htseq, mem := GiB) (counts file) {"
