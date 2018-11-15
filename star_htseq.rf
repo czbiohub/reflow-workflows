@@ -32,15 +32,15 @@ star := "quay.io/biocontainers/star:2.6.0c--0"
 samtools := "biocontainers/samtools"
 htseq := "quay.io/biocontainers/htseq:0.9.1--py36_0"
 
-func DecompressReference(reference file) =
-    exec(image := ubuntu, mem := 32*GiB) (fasta file, gtf file) {"
-        mkdir /tmp/reference
-        tar -C /tmp/reference -xzvf {{reference}} 
-        pwd
-        ls -lha /tmp/reference/
-        cp /tmp/reference/*/*fa {{fasta}}
-        cp /tmp/reference/*/*gtf {{gtf}}
+func DecompressReference(tgz file) = {
+    outdir := exec(image := ubuntu, mem := 32*GiB) (outdir dir) {"
+        tar -C {{outdir}} -xzvf {{tgz}} 
     "}
+    val (fasta, _) = dirs.Pick(outdir, "*.fasta")
+    val (gtf, _) = dirs.Pick(outdir, "*.gtf")
+
+    {fasta, gtf}
+}
 
 func starIndex(fasta, gtf file) (out dir) =
     exec(image := star, mem := 32*GiB) (out dir) {"
@@ -74,26 +74,26 @@ func starAlign(read1, read2 [file], genomeDir dir) =
             --readFilesIn {{read1}} {{read2}}
     "}
 
-func samSort(aligned file) = {
-    mem := 10 * len(aligned)
-    command_memory := 9 * len(aligned)
-    exec (image := samtools, mem) (sorted file) {"
-        samtools sort -m {{command_memory}} -o {{sorted}} {{aligned}}
+func samSort(aligned file) = 
+    // mem := 10 * len(aligned)
+    // command_memory := 9 * len(aligned)
+    exec (image := samtools, mem := 20*GiB) (sorted file) {"
+        samtools sort -m 18GB -o {{sorted}} {{aligned}}
     "}
-}
+
 
 func samIndex(sorted file) =
     exec(image := samtools, mem := GiB) (index file) {"
         samtools index -b {{sorted}} {{index}}
     "}
 
-func samSortByName(sorted file) = {
-    mem := 10 * len(sorted)
-    command_memory := 9 * len(sorted)
-    exec(image := samtools, mem) (byname file) {"
-        samtools sort -m {{command_memory}} -n -o {{byname}} {{sorted}}
+func samSortByName(sorted file) = 
+    // mem := 10 * len(sorted)
+    // command_memory := 9 * len(sorted)
+    exec(image := samtools, mem := 20*GiB) (byname file) {"
+        samtools sort -m 18GB -n -o {{byname}} {{sorted}}
     "}
-}
+
 
 func htseqCount(byName, gtf file) =
    exec(image := htseq, mem := GiB) (counts file) {"
@@ -107,22 +107,23 @@ val Main = {
     output := "s3://olgabot-maca/star_htseq_test/"
     genome := "mm10-plus"
 
+
     output := util.MaybeAddTrailingSlash(output)
 
     r1 := util.SplitByPipe(read1)
     r2 := util.SplitByPipe(read2)
 
-    reference := file("s3://czbiohub-reference/" + genome + ".tgz")
-    val (fasta, gtf) = DecompressReference(reference)
+    tgz := file("s3://czbiohub-reference/" + genome + ".tgz")
+    val reference = DecompressReference(tgz)
 
-    val index = starIndex(fasta, gtf)
+    val index = starIndex(reference.fasta, reference.gtf)
     val alignment_dir = starAlign(r1, r2, index)
     
     val (aligned, _) = dirs.Pick(alignment_dir, "*Aligned.out.bam")
     val sorted = samSort(aligned)
     val index = samIndex(sorted)
     val byName = samSortByName(sorted)
-    val counts = htseqCount(byName, gtf)
+    val counts = htseqCount(byName, reference.gtf)
 
     count_dir := dirs.Make(["htseq-count.txt": counts])
 
