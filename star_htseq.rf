@@ -36,6 +36,7 @@ func DecompressReference(tgz file) = {
     outdir := exec(image := ubuntu, mem := 32*GiB) (outdir dir) {"
         tar -C {{outdir}} -xzvf {{tgz}} 
     "}
+    outdir := trace(outdir)
     val (fasta, _) = dirs.Pick(outdir, "*.fasta")
     val (gtf, _) = dirs.Pick(outdir, "*.gtf")
 
