@@ -1,24 +1,24 @@
-// param (
-//     // S3 path to read1 of the fastq/fasta file. If multiple files, 
-//     // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
-//     read1 string
+param (
+    // S3 path to read1 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read1 string
 
-//     // S3 path to read2 of the fastq/fasta file. If multiple files, 
-//     // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
-//     read2 string
+    // S3 path to read2 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read2 string
 
-//     // Identifier of the sample
-//     name string
+    // Identifier of the sample
+    name string
 
-//     // Full s3 folder location to copy alignment output and htseq 
-//     // results. Each sample is output to a folder.
-//     output string
+    // Full s3 folder location to copy alignment output and htseq 
+    // results. Each sample is output to a folder.
+    output string
 
-//     // Either "hg38-plus" or "mm10-plus". 
-//     // Must be a .tgz file containing a folder with a single .fa 
-//     // and .gtf file in s3://czbiohub-reference
-//     genome = "hg38-plus"
-// )
+    // Either "hg38-plus" or "mm10-plus". 
+    // Must be a .tgz file containing a folder with a single .fa 
+    // and .gtf file in s3://czbiohub-reference
+    genome = "hg38-plus"
+)
 
 
 val files = make("$/files")
@@ -98,13 +98,6 @@ func htseqCount(byName, gtf file) =
    "}
 
 val Main = {
-    read1 := "s3://czbiohub-maca/remux_data/170907_A00111_0051_BH2HWLDMXX/rawdata/N8-MAA000612-3_9_M-1-1_S36/N8-MAA000612-3_9_M-1-1_S36_R1_001.fastq.gz"
-    read2 := "s3://czbiohub-maca/remux_data/170907_A00111_0051_BH2HWLDMXX/rawdata/N8-MAA000612-3_9_M-1-1_S36/N8-MAA000612-3_9_M-1-1_S36_R2_001.fastq.gz"
-    name := "N8-MAA000612-3_9_M-1-1_S36"
-    output := "s3://olgabot-maca/star_htseq_test/"
-    genome := "mm10-plus"
-
-
     output := util.MaybeAddTrailingSlash(output)
 
     r1 := util.SplitByPipe(read1)
