@@ -76,8 +76,6 @@ func starAlign(read1, read2 [file], genomeDir dir) =
     "}
 
 func samSort(aligned file) = 
-    // mem := 10 * len(aligned)
-    // command_memory := 9 * len(aligned)
     exec (image := samtools, mem := 20*GiB) (sorted file) {"
         samtools sort -m 18GB -o {{sorted}} {{aligned}}
     "}
@@ -89,8 +87,6 @@ func samIndex(sorted file) =
     "}
 
 func samSortByName(sorted file) = 
-    // mem := 10 * len(sorted)
-    // command_memory := 9 * len(sorted)
     exec(image := samtools, mem := 20*GiB) (byname file) {"
         samtools sort -m 18GB -n -o {{byname}} {{sorted}}
     "}
