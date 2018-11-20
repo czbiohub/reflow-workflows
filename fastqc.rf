@@ -7,6 +7,7 @@ param (
 val dirs = make("$/dirs")
 val docker_image = "quay.io/biocontainers/fastqc:0.11.7--4"
 
+
 func FastQC(reads file, id string) dir = {
 	d := dirs.Make([id+".fastq.gz": reads])
     exec(image := docker_image, mem := 4*GiB, cpu := 8) (out dir) {"

@@ -1,22 +1,60 @@
+param (
+    // S3 path to read1 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read1 string
+
+    // S3 path to read2 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read2 string
+
+    // Identifier of the sample
+    name string
+
+    // Full s3 folder location to copy alignment output and htseq 
+    // results. Each sample is output to a folder.
+    output string
+
+    // Either "hg38-plus" or "mm10-plus". 
+    // Must be a .tgz file containing a folder with a single .fa 
+    // and .gtf file in s3://czbiohub-reference
+    genome = "hg38-plus"
+)
+
+
+val files = make("$/files")
 val dirs = make("$/dirs")
 
-star := "darcyabjones/star"
-samtools := "biocontainers/samtools"
-htseq := "sleight82/htseq-count"
+// Local utility file
+val util = make("./util.rf")
 
-func starIndex(genome file) (out dir) =
+ubuntu := "ubuntu:16.04"
+star := "quay.io/biocontainers/star:2.6.0c--0"
+samtools := "biocontainers/samtools"
+htseq := "quay.io/biocontainers/htseq:0.9.1--py36_0"
+
+func DecompressReference(tgz file) = {
+    outdir := exec(image := ubuntu, mem := 32*GiB) (outdir dir) {"
+        tar -C {{outdir}} -xzvf {{tgz}} 
+    "}
+    outdir := trace(outdir)
+    val (fasta, _) = dirs.Pick(outdir, "*/*.fa*")
+    val (gtf, _) = dirs.Pick(outdir, "*/*.gtf")
+
+    {fasta, gtf}
+}
+
+func starIndex(fasta, gtf file) (out dir) =
     exec(image := star, mem := 32*GiB) (out dir) {"
-        tar -xvf {{genome}}
         STAR \
         --runThreadN 12 \
         --runMode genomeGenerate \
         --genomeDir {{out}} \
-        --genomeFastaFiles hg38-plus/hg38-plus.fa \
-        --sjdbGTFfile hg38-plus/hg38-plus.gtf
+        --genomeFastaFiles {{fasta}} \
+        --sjdbGTFfile {{gtf}}
     "}
 
-func starAlign(fastq file, genomeDir dir) = 
-    exec(image := star, mem := 12*GiB) (out dir) {"
+func starAlign(read1, read2 [file], genomeDir dir) = 
+    exec(image := star, mem := 12*GiB, cpu := 12) (out dir) {"
         cd {{out}}
         STAR --outFilterType BySJout \
             --outFilterMultimapNmax 20 \
@@ -34,23 +72,25 @@ func starAlign(fastq file, genomeDir dir) =
             --readFilesCommand zcat \
             --runThreadN 12 \
             --genomeDir {{genomeDir}} \
-            --readFilesIn {{fastq}}
+            --readFilesIn {{read1}} {{read2}}
     "}
 
-func samSort(aligned file) =
-    exec (image := samtools, mem := GiB) (sorted file) {"
-        samtools sort -m 6000000000 -o {{sorted}} {{aligned}}
+func samSort(aligned file) = 
+    exec (image := samtools, mem := 20*GiB) (sorted file) {"
+        samtools sort -m 18GB -o {{sorted}} {{aligned}}
     "}
+
 
 func samIndex(sorted file) =
     exec(image := samtools, mem := GiB) (index file) {"
         samtools index -b {{sorted}} {{index}}
     "}
 
-func samSortByName(sorted file) =
-    exec(image := samtools, mem := GiB) (byname file) {"
-        samtools sort -m 5000000000 -n -o {{byname}} {{sorted}}
+func samSortByName(sorted file) = 
+    exec(image := samtools, mem := 20*GiB) (byname file) {"
+        samtools sort -m 18GB -n -o {{byname}} {{sorted}}
     "}
+
 
 func htseqCount(byName, gtf file) =
    exec(image := htseq, mem := GiB) (counts file) {"
@@ -58,15 +98,25 @@ func htseqCount(byName, gtf file) =
    "}
 
 val Main = {
-    fastq := file("s3://czi-hca/data/200016868/rawdata/SRR035245/SRR035245.fastq.gz")
-    hg38    := file("s3://czi-hca/ref-genome/hg38-plus.tgz")
-    hg38Gtf := file("s3://czi-hca/ref-genome/hg38-plus.gtf")
+    output := util.MaybeAddTrailingSlash(output)
 
-    val index = starIndex(hg38)
-    val output = starAlign(fastq, index)
-    val (aligned, _) = dirs.Pick(output, "Aligned.out.bam")
+    r1 := util.SplitByPipe(read1)
+    r2 := util.SplitByPipe(read2)
+
+    tgz := file("s3://czbiohub-reference/" + genome + ".tgz")
+    val reference = DecompressReference(tgz)
+
+    val index = starIndex(reference.fasta, reference.gtf)
+    val alignment_dir = starAlign(r1, r2, index)
+    
+    val (aligned, _) = dirs.Pick(alignment_dir, "*Aligned.out.bam")
     val sorted = samSort(aligned)
     val index = samIndex(sorted)
     val byName = samSortByName(sorted)
-    htseqCount(byName, hg38Gtf)
+    val counts = htseqCount(byName, reference.gtf)
+
+    count_dir := dirs.Make(["htseq-count.txt": counts])
+
+    output_dirs := [alignment_dir, count_dir]
+    [dirs.Copy(d, output) | d <- output_dirs]
 }
