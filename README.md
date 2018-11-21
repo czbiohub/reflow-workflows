@@ -1,5 +1,6 @@
 # reflow-workflows
-[![Build Status](https://travis-ci.org/czbiohub/reflow-workflows.svg?branch=master)](https://travis-ci.org/czbiohub/reflow-workflows)
+[![Build Status](https://travis-ci.org/czbiohub/reflow-workflows.svg?branch=master)](https://travis-ci.org/czbiohub/reflow-workflows) [![Documentation Status](https://readthedocs.org/projects/reflow-workflows/badge/?version=latest)](https://reflow-workflows.readthedocs.io/en/latest/?badge=latest)
+
 
 Commonly used bioinformatics pipelines written in [Reflow](https://github.com/grailbio/reflow).
 
