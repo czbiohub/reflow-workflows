@@ -14,10 +14,9 @@ param (
     // results. Each sample is output to a folder.
     output string
 
-    // Either "hg38-plus" or "mm10-plus". 
-    // Must be a .tgz file containing a folder with a single .fa 
-    // and .gtf file in s3://czbiohub-reference
-    genome = "hg38-plus"
+    // Only mouse/vM19 is supported for now. Must be a subfolder in
+    // the reference containing *.genome.fa and *.annotation.gtf files
+    genome = "mouse/vM19"
 
     // If "west", use the us-west-2 bucket s3://czbiohub-reference
     //      for the reference genome,
