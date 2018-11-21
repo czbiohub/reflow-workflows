@@ -121,6 +121,13 @@ You'll need to install Golang and [Reflow](https://github.com/grailbio/reflow) i
 		$EXPT_ID $TAXON s3://olgabot-maca/aguamenti-test/
 	```
 
+8. Change to the directory and run the batch!
+
+	```
+	~/reflow-batches/rnaseq/mus/20181030_FS10000331_12_BNT40322-1214/
+	reflow runbatch
+	```
+
 #### On your local computer
 
 
