@@ -14,10 +14,15 @@ param (
     // results. Each sample is output to a folder.
     output string
 
-    // Either "hg38-plus" or "mm10-plus". 
-    // Must be a .tgz file containing a folder with a single .fa 
-    // and .gtf file in s3://czbiohub-reference
-    genome = "hg38-plus"
+    // Only mouse/vM19 is supported for now. Must be a subfolder in
+    // the reference containing *.genome.fa and *.annotation.gtf files
+    genome = "mouse/vM19"
+
+    // If "west", use the us-west-2 bucket s3://czbiohub-reference
+    //      for the reference genome,
+    // if "east", use the us-east-1 bucket s3://czbiohub-reference-east
+    //      for the reference genome
+    region = "west"
 )
 
 
@@ -31,6 +36,11 @@ ubuntu := "ubuntu:16.04"
 star := "quay.io/biocontainers/star:2.6.0c--0"
 samtools := "biocontainers/samtools"
 htseq := "quay.io/biocontainers/htseq:0.9.1--py36_0"
+
+reference_bucket := if region == "west" {
+        "s3://czbiohub-reference/" } else {
+        "s3://czbiohub-reference-east/"
+    }
 
 func DecompressReference(tgz file) = {
     outdir := exec(image := ubuntu, mem := 32*GiB) (outdir dir) {"
@@ -103,7 +113,7 @@ val Main = {
     r1 := util.SplitByPipe(read1)
     r2 := util.SplitByPipe(read2)
 
-    tgz := file("s3://czbiohub-reference/" + genome + ".tgz")
+    tgz := file(reference_bucket + genome + ".tgz")
     val reference = DecompressReference(tgz)
 
     val index = starIndex(reference.fasta, reference.gtf)
