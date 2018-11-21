@@ -1,0 +1,41 @@
+
+
+param (
+    // S3 path to read1 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read1 string
+    // S3 path to read2 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read2 string
+
+    // Full s3 file location to put the assembled reads
+    output string
+)
+
+
+val trinity = "biocontainers/trinity"
+
+
+val dirs = make("$/dirs")
+
+// Instantiate system module "strings"
+val strings = make("$/strings")
+
+func Trinity(r1, r2 [file]) =
+    exec(image := trinity, mem := 60*GiB, cpu := 16) (trinity_out dir) {"
+        Trinity --seqType fq --left {{r1}} --right {{r2}} --CPU 16 --max_memory 60G --output {{trinity_out}}
+"}
+
+// Split each read string by the pipe "|" to get individual s3 paths
+val read1s = strings.Split(read1, "|")
+val read2s = strings.Split(read2, "|")
+
+// Create a file for each element in the `read1s`, `read2s` string array
+// Now `r1`, `r1` are arrays of files
+val r1 = [file(read1) | read1 <- read1s]
+val r2 = [file(read2) | read2 <- read2s]
+
+val trinity_out = Trinity(r1, r2)
+
+val Main = dirs.Copy(trinity_out, output)
+
