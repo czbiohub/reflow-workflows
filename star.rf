@@ -2,7 +2,7 @@
 star := "quay.io/biocontainers/star:2.6.0c--0"
 
 
-func starIndex(fasta, gtf file) (out dir) =
+func Index(fasta, gtf file) (out dir) =
     exec(image := star, mem := 32*GiB) (out dir) {"
         STAR \
         --runThreadN 12 \
@@ -12,7 +12,7 @@ func starIndex(fasta, gtf file) (out dir) =
         --sjdbGTFfile {{gtf}}
     "}
 
-func starAlign(read1, read2 [file], genomeDir dir) = 
+func Align(read1, read2 [file], genomeDir dir) = 
     exec(image := star, mem := 12*GiB, cpu := 12) (out dir) {"
         cd {{out}}
         STAR --outFilterType BySJout \

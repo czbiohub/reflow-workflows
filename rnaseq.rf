@@ -14,12 +14,16 @@ param (
     // results. Each sample is output to a folder.
     output string
 
-    // Either "hg38-plus" or "mm10-plus". 
-    // Must be a .tgz file containing a folder with a single .fa 
-    // and .gtf file in s3://czbiohub-reference
-    genome = "hg38-plus"
-)
+    // Only mouse/vM19 is supported for now. Must be a subfolder in
+    // the reference containing *.genome.fa and *.annotation.gtf files
+    genome = "mouse/vM19"
 
+    // If "west", use the us-west-2 bucket s3://czbiohub-reference
+    //      for the reference genome,
+    // if "east", use the us-east-1 bucket s3://czbiohub-reference-east
+    //      for the reference genome
+    region = "west"
+)
 
 val files = make("$/files")
 val dirs = make("$/dirs")
@@ -30,6 +34,14 @@ val utils = make("./utils.rf")
 // Fastqc
 val fastqc = make("./fastqc.rf")
 val star = make("./star.rf")
+val samtools = make("./samtools.rf")
+val htseq = make("./htseq.rf")
+
+
+reference_bucket := if region == "west" {
+        "s3://czbiohub-reference/" } else {
+        "s3://czbiohub-reference-east/"
+    }
 
 
 val Main = {
@@ -40,26 +52,26 @@ val Main = {
 
     reads := ["R1": r1, "R2": r2]
 
-    fastc_results := [fastqc.FastQC(r, name + "_" + read_number) | (read_number, r) <- reads]
+    fastqc_results := [fastqc.FastQC(r, name + "_" + read_number) | (read_number, r) <- reads]
 
-    
-    fasta_gz := dirs.Pick("*genome.fa.gz")
-    gtf_gz := dirs.Pick("*annotation.gtf.gz")
+    reference_dir := dir(reference_bucket + genome)
+    val (fasta_gz, _) = dirs.Pick(reference_dir, "*genome.fa.gz")
+    val (gtf_gz, _) = dirs.Pick(reference_dir, "*annotation.gtf.gz")
     fasta := utils.ParallelUnzip(fasta_gz, 8)
     gtf := utils.ParallelUnzip(gtf_gz, 8)
 
-    val index = starIndex(fasta, gtf)
-    val alignment_dir = starAlign(r1, r2, index)
+    val index = star.Index(fasta, gtf)
+    val alignment_dir = star.Align(r1, r2, index)
     
     val (aligned, _) = dirs.Pick(alignment_dir, "*Aligned.out.bam")
-    val sorted = samSort(aligned)
-    val index = samIndex(sorted)
-    val byName = samSortByName(sorted)
-    val counts = htseqCount(byName, reference.gtf)
+    val sorted = samtools.Sort(aligned)
+    val index = samtools.Index(sorted)
+    val byName = samtools.SortByName(sorted)
+    val counts = htseq.Count(byName, gtf)
 
     count_dir := dirs.Make(["htseq-count.txt": counts])
 
-    output_dirs := [alignment_dir, count_dir] + fastc_results
+    output_dirs := [alignment_dir, count_dir] + fastqc_results
 
     [dirs.Copy(d, output) | d <- output_dirs]
 }
