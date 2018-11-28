@@ -1,0 +1,61 @@
+assoc: dynamodb,czbiohub-reflow-quickstart
+cluster: ec2cluster
+ec2cluster:
+  ami: ami-4296ec3a
+  cloudconfig: {}
+  diskslices: 0
+  diskspace: 2500
+  disktype: gp2
+  instancetypes:
+  - c1.medium
+  - c1.xlarge
+  - c3.2xlarge
+  - c3.4xlarge
+  - c3.8xlarge
+  - c3.large
+  - c3.xlarge
+  - c4.2xlarge
+  - c4.4xlarge
+  - c4.8xlarge
+  - c4.large
+  - c4.xlarge
+  - c5.large
+  - c5.xlarge
+  - c5.2xlarge
+  - c5.4xlarge
+  - c5.9xlarge
+  - c5.18xlarge
+  - cc2.8xlarge
+  - m1.large
+  - m1.medium
+  - m1.small
+  - m1.xlarge
+  - m2.2xlarge
+  - m2.4xlarge
+  - m2.xlarge
+  - m3.2xlarge
+  - m3.large
+  - m3.medium
+  - m3.xlarge
+  - m4.16xlarge
+  - m4.4xlarge
+  - m4.xlarge
+  - m4.16xlarge
+  - m5.24xlarge
+  - r4.xlarge
+  - r4.16xlarge
+  - t1.micro
+  - t2.large
+  - t2.medium
+  - t2.micro
+  - t2.nano
+  - t2.small
+  keyname: ""
+  maxinstances: 20
+  region: us-west-2
+  securitygroup: sg-661d7f19
+  spot: true
+  sshkey: |
+    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDdE/ryKjTlTome/82Bx68aVaeEo3p+KkaKtIWRSmbHmd2HlLcEt56+9xzYuhYtQPIqZqKLI682HcUqNW9ApnTCK6uSbqGaaAQ/d6otnnEIL3Q+mLMzyA9ABZ5iX5Ny8M0uEuHLRblH7j/YIqbXKnXenCgC++4n+R/8sLYvULeTihdlCJj7C6FL5koyF+U0gTce3qcarpvdNNxnBgPor7cfRwzaF5co82xCB44Zoz76r6uDg9b9AYQPZyYaNuJCc7csZPpSUsrKj9G7Dcnsis/2k2BTc5yvMeF+sr5IKq2uZpkWQuaheSBkIMT9KelSvjtmAritTpPgxYGoVyEp3bphn1iMdxOLceCcu5ldj0TTgVdTrEb3A6Nvl4RZ3nxWrx5oNfKoLXo5wY/vrJxBwO3eZQVSQ27FQ2Foh86sA6eYEKD4c5cFNX09myb74JJp1ATn6FHdDWXx3d40pQKAP4CjqBo9TvcsXXJxWYQQ12CxrOxmyq55Suf/RKpRVsw4dO6xJBPilKGok31s9ePPik3ASmzz2nAOV+aQIFESQ5EcC7CKICUtsdjc6hxHrrzzf20D3pfcMJ9fZuNsSEGOVUBJqe+kHADlYMuUjgbS4dQykSJ2oDP/C5PQOstyVthm3t6YmR+VUsxvzwbu8EhNGDdVP60nOZK54aSVvRyft5vvww== olga.botvinnik@gmail.com
+https: httpsca,/Users/olgabot/.reflow/reflow.pem
+repository: s3,czbiohub-reflow-quickstart-cache
