@@ -87,7 +87,7 @@ files := make("$/files")
 // 	   3) The length of the entry in A.
 // 	   4) The fraction of bases in A that had non-zero coverage.
 func Coverage(reference, cell_bam file) = 
-    exec (image := bedtools, mem := 20*GiB) (output file) {"
+    exec (image := bedtools, mem := 2*GiB) (output file) {"
         bedtools coverage -a {{reference}} -b {{cell_bam}} > {{output}}
     "}
 
