@@ -1,5 +1,5 @@
-
-samtools := "biocontainers/samtools"
+// Docker image from bioconda
+val samtools = "quay.io/biocontainers/samtools:1.9--h46bd0b3_0"
 
 
 func Sort(aligned file) = 
