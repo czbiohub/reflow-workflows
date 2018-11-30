@@ -37,3 +37,7 @@ func MaybeAddTrailingSlash(folder string) = {
     output
 }
 
+
+
+func MakeFilename(id, suffix, extension string) =
+    id + "_" + suffix + extension
