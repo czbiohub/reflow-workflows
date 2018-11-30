@@ -2,7 +2,7 @@ read1 := "s3://czbiohub-maca/remux_data/170907_A00111_0051_BH2HWLDMXX/rawdata/N8
 read2 := "s3://czbiohub-maca/remux_data/170907_A00111_0051_BH2HWLDMXX/rawdata/N8-MAA000612-3_9_M-1-1_S36/N8-MAA000612-3_9_M-1-1_S36_R2_001.fastq.gz"
 name := "N8-MAA000612-3_9_M-1-1_S36"
 output := "s3://olgabot-maca/star_htseq_test/"
-genome := "mm10-plus"
+genome := "mouse/vM19"
 
 rnaseq := make("./rnaseq.rf",
 	read1, read2, name, output, genome)
