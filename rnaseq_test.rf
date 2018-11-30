@@ -4,8 +4,8 @@ name := "N8-MAA000612-3_9_M-1-1_S36"
 output := "s3://olgabot-maca/star_htseq_test/"
 genome := "mm10-plus"
 
-star_htseq := make("./star_htseq.rf",
+rnaseq := make("./rnaseq.rf",
 	read1, read2, name, output, genome)
 
 val Main = 
-	star_htseq.Main
+	rnaseq.Main

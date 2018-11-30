@@ -1,0 +1,65 @@
+param (
+    // S3 path to read1 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read1 string
+
+    // S3 path to read2 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read2 string
+
+    // Identifier of the sample
+    name string
+
+    // Full s3 folder location to copy alignment output and htseq 
+    // results. Each sample is output to a folder.
+    output string
+
+    // Either "hg38-plus" or "mm10-plus". 
+    // Must be a .tgz file containing a folder with a single .fa 
+    // and .gtf file in s3://czbiohub-reference
+    genome = "hg38-plus"
+)
+
+
+val files = make("$/files")
+val dirs = make("$/dirs")
+
+// Local utility file
+val utils = make("./utils.rf")
+
+// Fastqc
+val fastqc = make("./fastqc.rf")
+val star = make("./star.rf")
+
+
+val Main = {
+    output := utils.MaybeAddTrailingSlash(output)
+
+    r1 := utils.SplitByPipe(read1)
+    r2 := utils.SplitByPipe(read2)
+
+    reads := ["R1": r1, "R2": r2]
+
+    fastc_results := [fastqc.FastQC(r, name + "_" + read_number) | (read_number, r) <- reads]
+
+    
+    fasta_gz := dirs.Pick("*genome.fa.gz")
+    gtf_gz := dirs.Pick("*annotation.gtf.gz")
+    fasta := utils.ParallelUnzip(fasta_gz, 8)
+    gtf := utils.ParallelUnzip(gtf_gz, 8)
+
+    val index = starIndex(fasta, gtf)
+    val alignment_dir = starAlign(r1, r2, index)
+    
+    val (aligned, _) = dirs.Pick(alignment_dir, "*Aligned.out.bam")
+    val sorted = samSort(aligned)
+    val index = samIndex(sorted)
+    val byName = samSortByName(sorted)
+    val counts = htseqCount(byName, reference.gtf)
+
+    count_dir := dirs.Make(["htseq-count.txt": counts])
+
+    output_dirs := [alignment_dir, count_dir] + fastc_results
+
+    [dirs.Copy(d, output) | d <- output_dirs]
+}

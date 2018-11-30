@@ -1,0 +1,35 @@
+
+star := "quay.io/biocontainers/star:2.6.0c--0"
+
+
+func starIndex(fasta, gtf file) (out dir) =
+    exec(image := star, mem := 32*GiB) (out dir) {"
+        STAR \
+        --runThreadN 12 \
+        --runMode genomeGenerate \
+        --genomeDir {{out}} \
+        --genomeFastaFiles {{fasta}} \
+        --sjdbGTFfile {{gtf}}
+    "}
+
+func starAlign(read1, read2 [file], genomeDir dir) = 
+    exec(image := star, mem := 12*GiB, cpu := 12) (out dir) {"
+        cd {{out}}
+        STAR --outFilterType BySJout \
+            --outFilterMultimapNmax 20 \
+            --alignSJoverhangMin 8 \
+            --alignSJDBoverhangMin 1 \
+            --outFilterMismatchNmax 999 \
+            --outFilterMismatchNoverLmax 0.04 \
+            --alignIntronMin 20 \
+            --alignIntronMax 1000000 \
+            --alignMatesGapMax 1000000 \
+            --outSAMstrandField intronMotif \
+            --outSAMtype BAM Unsorted \
+            --outSAMattributes NH HI NM MD \
+            --outReadsUnmapped Fastx \
+            --readFilesCommand zcat \
+            --runThreadN 12 \
+            --genomeDir {{genomeDir}} \
+            --readFilesIn {{read1}} {{read2}}
+    "}

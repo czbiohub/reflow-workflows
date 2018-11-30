@@ -1,0 +1,19 @@
+
+samtools := "biocontainers/samtools"
+
+
+func samSort(aligned file) = 
+    exec (image := samtools, mem := 20*GiB) (sorted file) {"
+        samtools sort -m 18GB -o {{sorted}} {{aligned}}
+    "}
+
+
+func samIndex(sorted file) =
+    exec(image := samtools, mem := GiB) (index file) {"
+        samtools index -b {{sorted}} {{index}}
+    "}
+
+func samSortByName(sorted file) = 
+    exec(image := samtools, mem := 20*GiB) (byname file) {"
+        samtools sort -m 18GB -n -o {{byname}} {{sorted}}
+    "}

@@ -9,6 +9,9 @@ val path = make("$/path")
 // Instantiate Go system module "strings"
 val strings = make("$/strings")
 
+val tick_genome = "czbiohub/tick-genome"
+
+
 func CopyRenamedDir(results dir, id, output string) = {                                                                                                                                                                                                                          
   r := map([(id + "_" + filename, filepointer)| (filename, filepointer) <- map(results)])                                                                                                                                                                                                                       
   d := dirs.Make(r)                                                                                                                                                                                                                                                           
@@ -28,5 +31,33 @@ func SplitByPipe(pipe_separated string) = {
 	// Create a file for each element in the split string array
 	// Now everything is an array of files
 	[file(filename) | filename <- split]
+}
+
+
+func ParallelGzip(filename file, threads int) =
+    exec(image := tick_genome, cpu := threads) (gzipped file) {"
+    	pigz --processes {{threads}} -c {{filename}} > {{gzipped}}
+"}
+
+func ParallelUnzip(filename file, threads int) =
+    exec(image := tick_genome, cpu := threads) (unzipped file) {"
+    	pigz --processes {{threads}} -dc {{filename}} > {{unzipped}}
+"}
+
+
+
+// Split strings separated by a "|" ("pipe") and return a list of files
+func SplitByPipe(read string) = {
+	reads := strings.Split(read, "|")
+	[file(read) | read <- reads]
+}
+
+func MaybeAddTrailingSlash(folder string) = {
+	output := if strings.HasSuffix(folder, "/") {
+        folder + "/" 
+    } else {
+    	folder
+	}
+    output
 }
 
