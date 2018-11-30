@@ -2,8 +2,6 @@
 val dirs = make("$/dirs")
 val strings = make("$/strings")
 
-val utils = make("./utils.rf")
-
 val docker_image = "quay.io/biocontainers/fastqc:0.11.7--4"
 
 
