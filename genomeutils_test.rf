@@ -1,0 +1,24 @@
+
+// System modules
+val dirs = make("$/dirs")
+val test = make("$/test")
+
+// Local modules
+val fileutils = make("./fileutils.rf")
+val genomeutils = make("./genomeutils.rf")
+
+val TestExtractFastaGTF = {
+	reference_dir := dir("s3://czbiohub-reference/gencode/mouse/vM19/")
+    ref := genomeutils.ExtractFastaGTF(reference_dir)
+
+    gtf_header := fileutils.Echo("asdf\n") == fileutils.Header(ref.gtf)
+    fasta_header := fileutils.Echo("asdf\n") == fileutils.Header(ref.fasta)
+
+    gtf_linecount := fileutils.Echo("asdf\n") == fileutils.LineCount(ref.gtf)
+    fasta_linecount := fileutils.Echo("asdf\n") == fileutils.LineCount(ref.fasta)
+
+    test.All([gtf_header, fasta_header, gtf_linecount, fasta_linecount])
+}
+
+
+val Main = test.Assert([TestExtractFastaGTF])
