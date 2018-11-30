@@ -95,34 +95,9 @@ A1-B002427-3_39_F-1-1_trim=false_scaled=400     818f00a6 waiting
 *!!! Solution: run* `reflow runbatch -retry` *which will rerun your jobs !!!*
 
 
-## Debugging single jobs - inspect running and dead jobs
 
-#### **Shell into current**`<strong>exec</strong>` **environment**
+### **How to force rerunning of a workflow**
 
-While an exec is running, you can shell into its environment with `reflow shell`; get the exec uri via `reflow ps -l,` then pass that into reflow shell. Open a new terminal when you do this :)
-
-for example,
-
-``` syntaxhighlighter-pre
-reflow shell ec2-54-214-227-181.us-west-2.compute.amazonaws.com:9000/f1d4fc064c7a85c8/f046b4086edc0cee84b46d633a43fff01d203d4b3c92442cf9a77d0d7276f000
-```
-
-<span id="reflow-ssh-into-a-running-instance" class="confluence-anchor-link"></span>
-
-#### **SSH into a running instance**
-
-If you have a public SSH key in `~/.ssh/id_rsa.pub`, then this will be automatically installed on the Reflow instances, and you can ssh in to each instance (under the user "`core`"), e.g.,: `ssh core@ ec2-54-214-227-181.us-west-2.compute.amazonaws.com`
-
-<span id="reflow-retrieve-intermediate-files" class="confluence-anchor-link"></span>
-
-#### **Retrieve intermediate files**
-
-You can retrieve files that were produced by immediate stages by using `reflow cat`, e.g., `reflow cat sha256:... > myfile` if you want to inspect these.
-
-<span id="reflow-how-to-force-rerunning-of-a-workflow" class="confluence-anchor-link"></span>
-
-**How to force rerunning of a workflow**
-----------------------------------------
 
 WHen Reflow finishes successfully, it then considers the job done and caches the result. To force re-running the job without the cache, use either:
 
@@ -132,4 +107,66 @@ or
 
 `reflow -cache=off run myworkflow.rf`
 
-<span id="reflow-how-to-run-1000s-of-files-at-once" class="confluence-anchor-link"></span>
+
+
+
+## Debugging single jobs - inspect running and dead jobs
+
+### **Shell into current**`<strong>exec</strong>` **environment**
+
+While an exec is running, you can shell into its environment with `reflow shell`; get the exec uri via `reflow ps -l,` then pass that into reflow shell. Open a new terminal when you do this :)
+
+for example,
+
+``` syntaxhighlighter-pre
+reflow shell ec2-54-214-227-181.us-west-2.compute.amazonaws.com:9000/f1d4fc064c7a85c8/f046b4086edc0cee84b46d633a43fff01d203d4b3c92442cf9a77d0d7276f000
+```
+
+
+### **SSH into a running instance**
+
+If you have a public SSH key in `~/.ssh/id_rsa.pub`, then this will be automatically installed on the Reflow instances, and you can ssh in to each instance (under the user "`core`"), e.g.,: `ssh core@ ec2-54-214-227-181.us-west-2.compute.amazonaws.com`
+
+
+### **Retrieve intermediate files**
+
+You can retrieve files that were produced by immediate stages by using `reflow cat`, e.g., `reflow cat sha256:... > myfile` if you want to inspect these.
+
+## Fixing "remote error: tls: bad certificate"
+
+If you get an error that looks like this:
+
+```
+ Wed 28 Nov - 15:19  ~/code/reflow-workflows   origin ☊ olgabot/bedtools 1⚙ 1● 
+  reflow run bedtools.rf     
+reflow: run ID: 3b527e93
+reflow: ec2cluster: error while waiting for offers: offers ec2-18-237-51-122.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-18-237-51-122.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-35-167-37-93.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-35-167-37-93.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-35-167-37-93.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-35-167-37-93.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-52-40-64-53.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-52-40-64-53.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-52-40-64-53.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-52-40-64-53.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-54-189-82-93.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-54-189-82-93.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-54-189-82-93.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-54-189-82-93.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-34-216-195-169.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-34-216-195-169.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-34-216-195-169.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-34-216-195-169.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-34-211-39-196.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-34-211-39-196.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-34-211-39-196.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-34-211-39-196.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-54-187-47-140.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-54-187-47-140.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-54-187-47-140.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-54-187-47-140.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-34-219-99-230.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-34-219-99-230.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-34-219-99-230.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-34-219-99-230.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-52-35-166-218.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-52-35-166-218.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-52-35-166-218.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-52-35-166-218.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-18-237-162-121.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-18-237-162-121.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+reflow: ec2cluster: error while waiting for offers: offers ec2-18-237-162-121.us-west-2.compute.amazonaws.com:9000: network error: Get https://ec2-18-237-162-121.us-west-2.compute.amazonaws.com:9000/v1/offers%2F: remote error: tls: bad certificate
+ec2cluster: 0 instances:  (<=$0.0/hr), total{}, waiting{mem:2.0GiB cpu:1 disk:1.0GiB}, pending{mem:3.7GiB cpu:2 disk:250.0GiB intel_avx512:2}
+  allocate {mem:2.0GiB cpu:1 disk:1.0GiB}:  provisioning new instance                  49m28s
+  i-05f695bddc8609e65:                      waiting for reflowlet to become available  2m4s
+```
+
+Delete your local `reflow.pem` file:
+
+```
+rm -rf ~/.reflow/reflow.pem
+```
+
