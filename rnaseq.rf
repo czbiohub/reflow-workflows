@@ -52,9 +52,7 @@ val Main = {
     r1 := stringutils.SplitByPipe(read1)
     r2 := stringutils.SplitByPipe(read2)
 
-    reads := ["R1": r1, "R2": r2]
-
-    fastqc_results := [fastqc.FastQC(r, name + "_" + read_number) | (read_number, r) <- reads]
+    fastqc_results := fastqc.FastQCReadPair(r1, r2, name)
 
     ref := genomeutils.ExtractFastaGTF(dir(reference_bucket + genome))
 

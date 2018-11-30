@@ -20,3 +20,10 @@ func FastQC(reads [file], id string) dir = {
 	"}
 }
 
+// FastQCReadPair runs FASTQC on each read pair, labeling with the read number
+func FastQCReadPair(r1, r2 [file], name string) = {
+    reads := ["R1": r1, "R2": r2]
+
+    [FastQC(r, name + "_" + read_number) | (read_number, r) <- reads]
+
+}
