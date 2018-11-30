@@ -56,3 +56,9 @@ func HeaderLess(f file) =
 	exec(image := image, cpu, mem) (result file) {"
 		tail -n+2 {{f}} > {{result}}
 	"}
+
+// LineCount Counts the number of lines in a file
+func LineCount(f file) =
+	exec(image := image, cpu, mem) (result file) {"
+		wc -l {{f}} > {{result}}
+	"}
