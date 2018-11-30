@@ -25,14 +25,11 @@ val dirs = make("$/dirs")
 val files = make("$/files")
 val strings = make("$/strings")
 
-// Local library
-val utils = make("./utils.rf")
 
 func SearchSRA(id string) =
     exec(image := bionode) (json file) {"
         bionode-ncbi search sra '{{id}}' > {{json}}
 "}
-
 
 
 // Outputs a folder with $UID/$SRA.sra, e.g.:
@@ -73,33 +70,33 @@ func FastqDump(sra file) = {
 
     {singletons, R1, R2}
 }
-sra_ids := strings.Split(sra_id, "|")
-
-// Search NCBI and download metadata
-json_metadatas := [(id+"_metadata.json", SearchSRA(id)) | id <- sra_ids]
-json_dir := dirs.Make(map(json_metadatas))
-
-// Download SRA files
-sras := flatten([DownloadSRA(id) | id <- sra_ids])
-// create Fastq.gz files
-fastqss := [FastqDump(sra) | sra <- sras]
-
-
-func MakeFilename(id, suffix, extension string) =
-    id + "_" + suffix + extension
 
 
 func MakeRenamedFastqs(singletons, R1, R2 file, id, extension string) = {
-    renamed := [MakeFilename(id, "R1", extension): R1,
-                MakeFilename(id, "R2", extension): R2,
-                MakeFilename(id, "singletons", extension): singletons]
+    renamed := [stringutils.MakeFilename(id, "R1", extension): R1,
+                stringutils.MakeFilename(id, "R2", extension): R2,
+                stringutils.MakeFilename(id, "singletons", extension): singletons]
     dirs.Make(renamed)
 }
 
-fastq_dirs := [MakeRenamedFastqs(
-    fastqs.singletons, fastqs.R1, fastqs.R2, id, ".fastq.gz") | (fastqs, id) <- zip(fastqss, sra_ids)]
-
-to_copy := fastq_dirs + [json_dir]
 
 @requires(cpu := 8)
-val Main = [dirs.Copy(d, output) | d <- to_copy]
+val Main = {
+    sra_ids := strings.Split(sra_id, "|")
+
+    // Search NCBI and download metadata
+    json_metadatas := [(id+"_metadata.json", SearchSRA(id)) | id <- sra_ids]
+    json_dir := dirs.Make(map(json_metadatas))
+
+    // Download SRA files
+    sras := flatten([DownloadSRA(id) | id <- sra_ids])
+    // create Fastq.gz files
+    fastqss := [FastqDump(sra) | sra <- sras]
+
+    fastq_dirs := [MakeRenamedFastqs(
+        fastqs.singletons, fastqs.R1, fastqs.R2, id, ".fastq.gz") | (fastqs, id) <- zip(fastqss, sra_ids)]
+
+    to_copy := fastq_dirs + [json_dir]
+
+    [dirs.Copy(d, output) | d <- to_copy]
+}
