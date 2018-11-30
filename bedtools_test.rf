@@ -1,0 +1,19 @@
+
+val test = make("$/test")
+val fileutils = make("$/fileutils")
+val bedtools = make("./bedtools.rf")
+
+val TestCoverage = {
+	cell_bam := file("s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/170125/G12_1001000292/G12_1001000292_S72.homo.Aligned.out.sorted.bam")
+	reference := file("s3://darmanis-group/singlecell_lungadeno/non_immune/non_immune_bedtools/refs/BRAF_KRAS_EGFR_sorted.bed")
+
+	output := "s3://darmanis-group/singlecell_lungadeno/non_immune/non_immune_bedtools/outputs/G12_1001000292.coverage.txt"
+
+	coverage := bedtools.Coverage(reference, cell_bam)
+	coverage == fileutils.Echo("chr12	25245351	25245351	KRAS_G12C	0	0	2	0.0000000\nchr7	55181246	55181530	EGFR_exon19	0	0	284	0.0000000\nchr7	55191822	55191822	EGFR_L858R	0	0	2	0.0000000\nchr7	140753335	140753336	BRAF_V600E	0	0	1	0.0000000")
+
+}
+
+
+val Main = test.Assert([TestCoverage])
+

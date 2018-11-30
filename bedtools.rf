@@ -86,19 +86,8 @@ files := make("$/files")
 // 	   2) The number of bases in A that had non-zero coverage.
 // 	   3) The length of the entry in A.
 // 	   4) The fraction of bases in A that had non-zero coverage.
-func Coverage(reference, cell_bam file) = 
+func Coverage(input_a, input_b file) = 
     exec (image := bedtools, mem := 2*GiB) (output file) {"
-        bedtools coverage -a {{reference}} -b {{cell_bam}} > {{output}}
+        bedtools coverage -a {{input_a}} -b {{input_b}} > {{output}}
     "}
-
-
-val Main = {
-	cell_bam := file("s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/170125/G12_1001000292/G12_1001000292_S72.homo.Aligned.out.sorted.bam")
-	reference := file("s3://darmanis-group/singlecell_lungadeno/non_immune/non_immune_bedtools/refs/BRAF_KRAS_EGFR_sorted.bed")
-
-	output := "s3://darmanis-group/singlecell_lungadeno/non_immune/non_immune_bedtools/outputs/G12_1001000292.coverage.txt"
-
-	coverage := Coverage(reference, cell_bam)
-	files.Copy(coverage, output)
-}
 
