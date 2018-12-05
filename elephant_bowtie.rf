@@ -226,8 +226,8 @@ func BowtieAlign(read1, read2 file, index dir, index_id string) =
         	-2 {{read2}} \
         	--very-sensitive-local \
         	-S /mnt/data/output/Exp_12F_A08.sam \
-        	--no-unal --al-conc /mnt/data/output/Exp_12F_A08_conc.fq \
-        	2>> /mnt/data/output/elephant_bowtie2.log
+        	--no-unal --al-conc {{aligned_concordant}} \
+        	2>> {{log}}
     "}
 
 
