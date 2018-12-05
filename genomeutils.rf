@@ -15,5 +15,5 @@ func ExtractFastaGTF(reference_dir dir) = {
     fasta := fileutils.Gunzip(fasta_gz)
     gtf := fileutils.Gunzip(gtf_gz)
 
-    {fasta, gtf}	
+    {fasta, gtf}
 }
