@@ -22,6 +22,17 @@ func Gunzip(gz file) =
 		gunzip -c {{gz}} > {{f}}
 	"}
 
+
+// UnTarGZ decompresses a tar.gz file
+//
+// @param tar_gz File to be unzipped
+// @return f Unzipped file
+func UnTarGz(tgz file) =
+exec(image := image, mem := GiB, disk := 100*GiB) (unzipped dir) {"
+		tar xzf --directory {{unzipped}} {{tgz}}
+"}
+
+
 // Echo creates a file with a given string
 //
 // @param towrite String to write to file
