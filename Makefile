@@ -3,7 +3,7 @@ REFLOWS := $(wildcard **/*.rf)
 test:
 	for REFLOW in $(REFLOWS); do \
 		echo "--- Checking $$REFLOW for syntax errors ---" ;\
-		reflow doc $$REFLOW || exit $$? ;\
+		pushd $$(dirname $$REFLOW) && reflow doc $$(basename $$REFLOW) || exit $$? && popd;\
 	done
 
 test_download_sra:
@@ -11,4 +11,3 @@ test_download_sra:
 
 download_mosquito_blood:
 	reflow run download_sra.rf -sra_id=PRJEB23372 -output=s3://tick-genome/download-sra/mosquito_blood_scrnaseq/
- 
