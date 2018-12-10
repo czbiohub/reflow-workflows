@@ -25,8 +25,6 @@ val dirs = make("$/dirs")
 val files = make("$/files")
 val strings = make("$/strings")
 
-val stringutils = make("./stringutils.rf")
-
 func SearchSRA(id string) =
     exec(image := bionode) (json file) {"
         bionode-ncbi search sra '{{id}}' > {{json}}

@@ -1,7 +1,5 @@
 
 
-val samtools = "czbiohub/samtools"
-val bedtools = "czbiohub/bedtools"
 
 // Instantiate the system modules "dirs" (system modules begin
 // with $), assigning its instance to the "dirs" identifier. To
@@ -16,46 +14,9 @@ func Unzip(tgz file) =
         tar xzf --directory {{unzipped}} {{tgz}}
 "}
 
-// @requires(cpu := 1, mem := 64*GiB, disk := 1000 GiB)
-func SplitOnBarcodes(unzipped dir) = 
-    // possorted_genome_bam.bam is the "master" bam file for each 10x run
-    exec(image := samtools, mem := GiB, disk := 1000*GiB) (sams_split dir) {"
-        cd {{sams_split}}
-        samtools view {{unzipped}}/outs/possorted_genome_bam.bam | awk '{ for (i=1; i <= NF; i++) { if ($i ~/CB:Z/ ) {print >$i\"_noheader.sam\" } } }'
-"}
-
-func GetFilteredBarcodes(unzipped dir) =
-    // Create file of filtered barcode names
-    exec(image := samtools, mem := GiB) (filtered_barcodes file) {"
-    sed 's/^/CB:Z:/g' {{unzipped}}/filtered_gene_bc_matrices/MM10-PLUS/filtered_gene_bc_matrices/MM10-PLUS/barcodes.tsv > {{filtered_barcodes}}
-"}
-
-func GetFilteredSams(sams_split dir, filtered_barcodes file) =
-    // Only use sam files whose name matches a filtered barcode
-    exec(image := samtools, mem := GiB, cpu := 16) (filtered_sam dir) {"
-    export CORES=16
-    ls -1 {{sams_split}} | grep -f {{filtered_barcodes}} | xargs -P ${CORES} -I[] bash -c \"cp [] {{filtered_sam}}/[]\"
-"}
 
 
-func Header(unzipped dir) =
-    // possorted_genome_bam.bam is the "master" bam file for each 10x run
-    exec(image := samtools, mem := GiB) (header_sam file) {"
-        samtools view -H {{unzipped}}/outs/possorted_genome_bam.bam > {{header_sam}}
-"}
 
-func Reheader(header_sam file, sams_without_headers dir) =
-    exec(image := samtools, mem := GiB, cpu := 16) (bams_with_headers dir) {"
-        export CORES=16
-        ls -1 {{sams_without_headers}}/*.sam | xargs -P ${CORES} -I[] bash -c \"samtools view -Sbu [] | samtools reheader {{header_sam}} - > {{bams_with_headers}}/[].bam\"
-"}
-
-func BamToFastq(bam_folder dir) = 
-    // Sort bams by read id, then create paired-end fastq files
-    exec(image := bedtools, mem := GiB, cpu := 16) (fastqs dir) {"
-        cd {{fastqs}}
-        ls -1 {{bam_folder}}/*.bam | xargs -P ${CORES} -I[] bash -c \"samtools sort -n [] | bamToFastq -i - -fq []_R1.fastq -fq2 []_R2.fastq\"
-"}
 
 val Main = {
     val tenx_tgz = file("s3://czbiohub-maca/10x_data/10X_P1_1/10X_P1_1.tgz")
