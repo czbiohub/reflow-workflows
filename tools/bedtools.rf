@@ -12,7 +12,7 @@ files := make("$/files")
 
 // Usage:   bedtools coverage [OPTIONS] -a <bed/gff/vcf> -b <bed/gff/vcf>
 
-// Options: 
+// Options:
 // 	-hist	Report a histogram of coverage for each feature in A
 // 		as well as a summary histogram for _all_ features in A.
 
@@ -71,7 +71,7 @@ files := make("$/files")
 
 // 	-nobuf	Disable buffered output. Using this option will cause each line
 // 		of output to be printed as it is generated, rather than saved
-// 		in a buffer. This will make printing large output files 
+// 		in a buffer. This will make printing large output files
 // 		noticeably slower, but can be useful in conjunction with
 // 		other software tools and scripts that need to process one
 // 		line of bedtools output at a time.
@@ -80,14 +80,19 @@ files := make("$/files")
 // 		Takes an integer argument. Optional suffixes K/M/G supported.
 // 		Note: currently has no effect with compressed files.
 
-// Default Output:  
-// 	 After each entry in A, reports: 
+// Default Output:
+// 	 After each entry in A, reports:
 // 	   1) The number of features in B that overlapped the A interval.
 // 	   2) The number of bases in A that had non-zero coverage.
 // 	   3) The length of the entry in A.
 // 	   4) The fraction of bases in A that had non-zero coverage.
-func Coverage(input_a, input_b file) = 
+func Coverage(input_a, input_b file) =
     exec (image := bedtools, mem := 2*GiB) (output file) {"
         bedtools coverage -a {{input_a}} -b {{input_b}} > {{output}}
     "}
 
+
+func BamToFastq(bam file) =
+  exec (image := bedtools, mem := 2*GiB) (r1, r2 file) {"
+      bedtools bamtofastq -i {{bam}} -fq {{r1}} -fq2 {{r2}}
+  "}
