@@ -1,5 +1,5 @@
 param (
-    // Can be any of SRR, ERR, or SRX ids. 
+    // Can be any of SRR, ERR, or SRX ids.
     // Pipe-separate for multiple, e.g. 'SRR1539523|SRR1539569|SRR1539570'
     sra_id string
 
@@ -24,6 +24,9 @@ val fastq_dump = "quay.io/biocontainers/parallel-fastq-dump:0.6.3--py36_1"
 val dirs = make("$/dirs")
 val files = make("$/files")
 val strings = make("$/strings")
+
+val stringutils = make("../tools/stringutils.rf")
+
 
 func SearchSRA(id string) =
     exec(image := bionode) (json file) {"
@@ -53,7 +56,7 @@ func DownloadSRA(id string) ={
 // > If your data come from SRA, be sure to dump the fastq file like so:
 // >    SRA_TOOLKIT/fastq-dump --defline-seq '@$sn[_$rn]/$ri' --split-files file.sra
 func FastqDump(sra file) = {
-    outdir := exec(image := fastq_dump, cpu := 1, 
+    outdir := exec(image := fastq_dump, cpu := 1,
                     disk := fastq_dump_disk*GiB) (outdir dir) {"
         fastq-dump --outdir {{outdir}} --gzip \
             --skip-technical  --readids --read-filter pass \

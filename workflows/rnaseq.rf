@@ -1,16 +1,16 @@
 param (
-    // S3 path to read1 of the fastq/fasta file. If multiple files, 
+    // S3 path to read1 of the fastq/fasta file. If multiple files,
     // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
     read1 string
 
-    // S3 path to read2 of the fastq/fasta file. If multiple files, 
+    // S3 path to read2 of the fastq/fasta file. If multiple files,
     // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
     read2 string
 
     // Identifier of the sample
     name string
 
-    // Full s3 folder location to copy alignment output and htseq 
+    // Full s3 folder location to copy alignment output and htseq
     // results. Each sample is output to a folder.
     output string
 
@@ -59,12 +59,6 @@ val Main = {
 
     val index = star.Index(ref.fasta, ref.gtf)
     val alignment_dir = star.Align(r1, r2, index)
-    
-    val (aligned, _) = dirs.Pick(alignment_dir, "*Aligned.out.bam")
-    val sorted = samtools.Sort(aligned)
-    val index = samtools.Index(sorted)
-    val byName = samtools.SortByName(sorted)
-    val counts = htseq.Count(byName, gtf)
 
     val counts = htseq.CountFromSTAROutput(alignment_dir, ref.gtf)
 

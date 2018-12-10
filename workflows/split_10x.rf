@@ -7,6 +7,9 @@
 // $/dirs".
 val dirs = make("$/dirs")
 
+val samtools = make("../tools/samtools.rf")
+
+
 
 // @requires(cpu := 1, mem := 16*GiB, disk := 100 GiB)
 func Unzip(tgz file) =
@@ -22,15 +25,14 @@ val Main = {
     val tenx_tgz = file("s3://czbiohub-maca/10x_data/10X_P1_1/10X_P1_1.tgz")
 
     val unzipped = Unzip(tenx_tgz)
-    val sams_split = SplitOnBarcodes(unzipped)
-    val header_sam = Header(unzipped)
+    val sams_split = samtools.SplitOnBarcodes(unzipped)
+    val header_sam = samtools.Header(unzipped)
 
     val filtered_barcodes = GetFilteredBarcodes(unzipped)
-    val sams_without_headers = GetFilteredSams(sams_split, filtered_barcodes)
-    val bams_with_headers = Reheader(header_sam, sams_without_headers)
-    val fastqs = BamToFastq(bams_with_headers)
+    val sams_without_headers = samtools.GetFilteredSams(sams_split, filtered_barcodes)
+    val bams_with_headers = samtools.Reheader(header_sam, sams_without_headers)
+    val fastqs = bedtools.BamToFastq(bams_with_headers)
 
     val output_directory = "s3://olgabot-maca/10x/fastq/10X_P1_1/"
     dirs.Copy(fastqs, output_directory)
 }
-
