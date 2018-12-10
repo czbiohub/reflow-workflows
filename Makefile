@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 REFLOWS := $(wildcard **/*.rf)
 
 test:
