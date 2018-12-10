@@ -18,9 +18,9 @@ param (
     // the reference containing *.genome.fa and *.annotation.gtf files
     genome = "mouse/vM19"
 
-    // If "west", use the us-west-2 bucket s3://czbiohub-reference
+    // If "west", use the us-west-2 bucket s3://czbiohub-reference/gencode/
     //      for the reference genome,
-    // if "east", use the us-east-1 bucket s3://czbiohub-reference-east
+    // if "east", use the us-east-1 bucket s3://czbiohub-reference-east/gencode/
     //      for the reference genome
     region = "west"
 )
@@ -29,15 +29,14 @@ param (
 val files = make("$/files")
 val dirs = make("$/dirs")
 
-// Local utility files
-val fileutils = make("./fileutils.rf")
-val genomeutils = make("./genomeutils.rf")
-val stringutils = make("./stringutils.rf")
+// Local utility file
+val utils = make("../tools/utils.rf")
 
-// Bioinformatics tools
-val fastqc = make("./fastqc.rf")
-val star = make("./star.rf")
-val htseq = make("./htseq.rf")
+// Fastqc
+val fastqc = make("../tools/fastqc.rf")
+val star = make("../tools/star.rf")
+val samtools = make("../tools/samtools.rf")
+val htseq = make("../tools/htseq.rf")
 
 
 reference_bucket := if region == "west" {
