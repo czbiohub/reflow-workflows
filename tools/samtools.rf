@@ -1,8 +1,10 @@
+// Module for operating on sam/bam/cram files
 
+// Docker image from bioconda
 samtools := "quay.io/biocontainers/samtools:1.9--h8ee4bcc_1"
 
 
-func Sort(aligned file) = 
+func Sort(aligned file) =
     exec (image := samtools, mem := 20*GiB) (sorted file) {"
         samtools sort -m 18GB -o {{sorted}} {{aligned}}
     "}
@@ -13,13 +15,13 @@ func Index(sorted file) =
         samtools index -b {{sorted}} {{index}}
     "}
 
-func SortByName(sorted file) = 
+func SortByName(sorted file) =
     exec(image := samtools, mem := 20*GiB) (byname file) {"
         samtools sort -m 18GB -n -o {{byname}} {{sorted}}
     "}
 
 // @requires(cpu := 1, mem := 64*GiB, disk := 1000 GiB)
-func SplitOnBarcodes(unzipped dir) = 
+func SplitOnBarcodes(unzipped dir) =
     // possorted_genome_bam.bam is the "master" bam file for each 10x run
     exec(image := samtools, mem := GiB, disk := 1000*GiB) (sams_split dir) {"
         cd {{sams_split}}

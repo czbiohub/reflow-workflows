@@ -27,10 +27,12 @@ func SplitByPipe(read string) = {
 
 func MaybeAddTrailingSlash(folder string) = {
 	output := if strings.HasSuffix(folder, "/") {
-        folder + "/" 
+        folder + "/"
     } else {
     	folder
 	}
     output
 }
 
+func MakeFilename(id, suffix, extension string) =
+    id + "_" + suffix + extension
