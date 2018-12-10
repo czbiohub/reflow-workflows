@@ -1,0 +1,69 @@
+param (
+    // S3 path to read1 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read1 string
+
+    // S3 path to read2 of the fastq/fasta file. If multiple files, 
+    // can be pipe-separated e.g. sample1_01.fastq|sample1_02.fastq
+    read2 string
+
+    // Identifier of the sample
+    name string
+
+    // Full s3 folder location to copy alignment output and htseq 
+    // results. Each sample is output to a folder.
+    output string
+
+    // Only mouse/vM19 is supported for now. Must be a subfolder in
+    // the reference containing *.genome.fa and *.annotation.gtf files
+    genome = "mouse/vM19"
+
+    // If "west", use the us-west-2 bucket s3://czbiohub-reference
+    //      for the reference genome,
+    // if "east", use the us-east-1 bucket s3://czbiohub-reference-east
+    //      for the reference genome
+    region = "west"
+)
+
+// System modules
+val files = make("$/files")
+val dirs = make("$/dirs")
+
+// Local utility files
+val fileutils = make("./fileutils.rf")
+val genomeutils = make("./genomeutils.rf")
+val stringutils = make("./stringutils.rf")
+
+// Bioinformatics tools
+val fastqc = make("./fastqc.rf")
+val star = make("./star.rf")
+val htseq = make("./htseq.rf")
+
+
+reference_bucket := if region == "west" {
+        "s3://czbiohub-reference/gencode/" } else {
+        "s3://czbiohub-reference-east/gencode/"
+    }
+
+
+val Main = {
+    output := stringutils.MaybeAddTrailingSlash(output)
+
+    r1 := stringutils.SplitByPipe(read1)
+    r2 := stringutils.SplitByPipe(read2)
+
+    fastqc_results := fastqc.FastQCReadPair(r1, r2, name)
+
+    ref := genomeutils.ExtractFastaGTF(dir(reference_bucket + genome))
+
+    val index = star.Index(ref.fasta, ref.gtf)
+    val alignment_dir = star.Align(r1, r2, index)
+
+    val counts = htseq.CountFromSTAROutput(alignment_dir, ref.gtf)
+
+    count_dir := dirs.Make(["htseq-count.txt": counts])
+
+    output_dirs := [alignment_dir, count_dir] + fastqc_results
+
+    [dirs.Copy(d, output) | d <- output_dirs]
+}

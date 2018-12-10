@@ -1,0 +1,43 @@
+// Instantiate the system modules "dirs" (system modules begin
+// with $), assigning its instance to the "dirs" identifier. To
+// view the documentation for this module, run "reflow doc
+// $/dirs".
+val dirs = make("$/dirs")
+val files = make("$/files")
+
+// Instantiate Go system module "strings"
+val strings = make("$/strings")
+
+val tick_genome = "czbiohub/tick-genome"
+
+
+func SplitByPipe(pipe_separated string) = {
+	// Split each read string by the pipe "|" to get individual s3 paths
+	val split = strings.Split(pipe_separated, "|")
+
+	// Create a file for each element in the split string array
+	// Now everything is an array of files
+	[file(filename) | filename <- split]
+}
+
+
+
+// Split strings separated by a "|" ("pipe") and return a list of files
+func SplitByPipe(read string) = {
+	reads := strings.Split(read, "|")
+	[file(read) | read <- reads]
+}
+
+func MaybeAddTrailingSlash(folder string) = {
+	output := if strings.HasSuffix(folder, "/") {
+        folder + "/" 
+    } else {
+    	folder
+	}
+    output
+}
+
+
+
+func MakeFilename(id, suffix, extension string) =
+    id + "_" + suffix + extension

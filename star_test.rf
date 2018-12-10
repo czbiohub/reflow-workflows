@@ -1,0 +1,37 @@
+
+// System modules
+val dirs = make("$/dirs")
+val test = make("$/test")
+
+// Local modules
+val fileutils = make("./fileutils.rf")
+val genomeutils = make("./genomeutils.rf")
+
+val star = make("./star.rf")
+
+func FileExistsInDir(d dir, filename string) = {
+	val (_, filename2) = dirs.Pick(d, filename)
+	filename == filename2
+}
+
+val TestIndex = {
+	reference_dir := dir("s3://czbiohub-reference/gencode/mouse/vM19/")
+    ref := genomeutils.ExtractFastaGTF(reference_dir)
+
+    val index = star.Index(ref.fasta, ref.gtf)
+    index := trace(index)
+    filenames := ["Genome", "SA", "SAindex", "chrLength.txt", "chrName.txt",
+    	"chrNameLength.txt", "chrStart.txt", "exonGeTrInfo.tab", "exonInfo.tab",
+    	"geneInfo.tab", "genomeParameters.txt", "sjdbInfo.txt", "sjdbList.fromGTF.out.tab",
+    	"sjdbList.out.tab", "transcriptInfo.tab"]
+
+    correct_n_files := len(filenames) == len(index)
+
+    val (chr_name_length, _) = dirs.Pick(index, "chrNameLength.txt")
+    correct_chrNameLength := fileutils.Echo("chr1\t195471971\n") == fileutils.Header(chr_name_length)
+    file_exists := [FileExistsInDir(index, f) | f <- filenames]
+    test.All([correct_n_files, correct_chrNameLength] + file_exists)
+}
+
+
+val Main = test.Assert([TestIndex])

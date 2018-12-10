@@ -1,21 +1,29 @@
-param (
-    read_fastq string  // S3 path to a single fastq.gz file
-    outdir string      // S3 path to a location to put the FastQC reports
-    id string		   // name of the sample
-)
 
 val dirs = make("$/dirs")
+val strings = make("$/strings")
+
 val docker_image = "quay.io/biocontainers/fastqc:0.11.7--4"
 
 
-func FastQC(reads file, id string) dir = {
-	d := dirs.Make([id+".fastq.gz": reads])
+func FastQC(reads [file], id string) dir = {
+	renamed := if len(reads) == 1 {
+			val [r] = reads
+			[(id + ".fastq.gz", r)]
+		} else {
+			[(id + "_" + strings.FromInt(i)+".fastq.gz", f) | 
+    	(i, f) <- zip(range(0, len(reads)), reads)]
+		}
+
+	d := dirs.Make(map(renamed))
     exec(image := docker_image, mem := 4*GiB, cpu := 8) (out dir) {"
-        /usr/local/bin/fastqc -o {{out}} --threads 8 {{d}}/{{id}}.fastq.gz
+        /usr/local/bin/fastqc -o {{out}} --threads 8 {{d}}/*.fastq.gz
 	"}
 }
 
-val fastqc_res = FastQC(file(read_fastq), id)
+// FastQCReadPair runs FASTQC on each read pair, labeling with the read number
+func FastQCReadPair(r1, r2 [file], name string) = {
+    reads := ["R1": r1, "R2": r2]
 
-@requires(cpu := 1)
-val Main = dirs.Copy(fastqc_res, outdir)
+    [FastQC(r, name + "_" + read_number) | (read_number, r) <- reads]
+
+}

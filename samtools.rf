@@ -1,0 +1,19 @@
+// Docker image from bioconda
+val samtools = "quay.io/biocontainers/samtools:1.9--h46bd0b3_0"
+
+
+func Sort(aligned file) = 
+    exec (image := samtools, mem := 20*GiB) (sorted file) {"
+        samtools sort -m 18GB -o {{sorted}} {{aligned}}
+    "}
+
+
+func Index(sorted file) =
+    exec(image := samtools, mem := GiB) (index file) {"
+        samtools index -b {{sorted}} {{index}}
+    "}
+
+func SortByName(sorted file) = 
+    exec(image := samtools, mem := 20*GiB) (byname file) {"
+        samtools sort -m 18GB -n -o {{byname}} {{sorted}}
+    "}

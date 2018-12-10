@@ -1,0 +1,26 @@
+
+val test = make("$/test")
+val fileutils = make("./fileutils.rf")
+val genomeutils = make("./genomeutils.rf")
+val htseq = make("./htseq.rf")
+val star = make("./star.rf")
+
+
+val TestCountFromSTAROutput = {
+	r1 := [file("s3://czbiohub-maca/remux_data/170907_A00111_0051_BH2HWLDMXX/rawdata/N8-MAA000612-3_9_M-1-1_S36/N8-MAA000612-3_9_M-1-1_S36_R1_001.fastq.gz")]
+	r2 := [file("s3://czbiohub-maca/remux_data/170907_A00111_0051_BH2HWLDMXX/rawdata/N8-MAA000612-3_9_M-1-1_S36/N8-MAA000612-3_9_M-1-1_S36_R2_001.fastq.gz")]
+
+	reference_dir := dir("s3://czbiohub-reference/gencode/mouse/vM19/")
+    ref := genomeutils.ExtractFastaGTF(reference_dir)
+
+    val index = star.Index(ref.fasta, ref.gtf)
+    val alignment_dir = star.Align(r1, r2, index)
+
+    val counts = htseq.CountFromSTAROutput(alignment_dir, ref.gtf)
+
+    counts := trace(counts)
+    fileutils.Header(counts) == fileutils.Echo("ENSMUSG00000000001.4	4\n")
+}
+
+
+val Main = test.Assert([TestCountFromSTAROutput])

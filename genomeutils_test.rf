@@ -1,0 +1,28 @@
+
+// System modules
+val dirs = make("$/dirs")
+val test = make("$/test")
+
+// Local modules
+val fileutils = make("./fileutils.rf")
+val genomeutils = make("./genomeutils.rf")
+
+val TestExtractFastaGTF = {
+	reference_dir := dir("s3://czbiohub-reference/gencode/mouse/vM19/")
+    ref := genomeutils.ExtractFastaGTF(reference_dir)
+
+    // Adds debug statements of file sha and size
+    gtf := trace(ref.gtf)
+    fasta := trace(ref.fasta)
+
+    gtf_header := fileutils.Echo("##description: evidence-based annotation of the mouse genome (GRCm38), version M19 (Ensembl 94)\n") == fileutils.Header(gtf)
+    fasta_header := fileutils.Echo(">chr1 1\n") == fileutils.Header(fasta)
+
+    gtf_size := len(gtf) == 819427569
+    fasta_size := len(fasta) == 2801442408
+
+    test.All([gtf_header, fasta_header, gtf_size, fasta_size])
+}
+
+
+val Main = test.Assert([TestExtractFastaGTF])
