@@ -1,4 +1,4 @@
-REFLOWS := $(wildcard *.rf)
+REFLOWS := $(wildcard **/*.rf)
 
 test:
 	for REFLOW in $(REFLOWS); do \
