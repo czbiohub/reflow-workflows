@@ -1,5 +1,8 @@
+// Module with rename-and-copy utilities
+
 val dirs = make("$/dirs")
 val files = make("$/files")
+val path = make("$/path")
 
 
 

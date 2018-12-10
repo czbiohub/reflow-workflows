@@ -1,8 +1,3 @@
-val dirs = make("$/dirs")
-val files = make("$/files")
-
-
-
 func CopyRenamedDir(results dir, id, output string) = {                                                                                                                                                                                                                          
   r := map([(id + "_" + filename, filepointer)| (filename, filepointer) <- map(results)])                                                                                                                                                                                                                       
   d := dirs.Make(r)                                                                                                                                                                                                                                                           

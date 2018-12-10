@@ -1,0 +1,98 @@
+param (
+    // local sample sheet
+    samplesheet string
+
+    // "s3://czbiohub-seqbot/bcl/[runID]"
+    bcl_path string
+
+    // "s3://bucket/path/to/output"
+    output_path string
+
+    // if set, run bcl2fastq with no lane splitting, only applies to bcl2fastq (not 10x)
+    no_lane_splitting = false
+
+    // if set, use 10x cellranger to demux
+    cellranger = false
+
+    // czbiohub docker image containing bcl2fastq and cellranger
+    docker_image = "czbiohub/demuxer"
+)
+
+val dirs = make("$/dirs")
+val strings = make("$/strings")
+val path = make("$/path")
+
+// bcl2fastq behavioral options:
+// --adapter-stringency
+// --barcode-mismatches
+// --create-fastq-for-indexreads
+// --ignore-missing-bcls
+// --ignore-missing-filter
+// --ignore-missing-positions
+// --minimum-trimmed-readlength
+// --mask-short-adapter-reads
+// --tiles
+// --use-bases-mask
+// --with-failed-reads
+// --write-fastq-reversecomplement
+// --no-bgzf-compression
+// --fastq-compression-level
+// --no-lane-splitting
+// --find-adapters-withsliding-window
+
+// Runs bcl2fastq with --no-lane-splitting option.
+func bcl2fastq_no_split(samplesheet file, bcl_dir dir) =
+    exec(image := docker_image, cpu := 32, mem := 256*GiB) (out dir) {"
+        bcl2fastq --no-lane-splitting --sample-sheet {{samplesheet}} -R {{bcl_dir}} -o {{out}}
+    "}
+
+// Runs bcl2fastq with lane splitting.
+func bcl2fastq_split(samplesheet file, bcl_dir dir) =
+    exec(image := docker_image, cpu := 32, mem := 256*GiB) (out dir) {"
+        bcl2fastq --sample-sheet {{samplesheet}} -R {{bcl_dir}} -o {{out}}
+    "}
+
+// Modifies Reports/ and Stats/ paths prevent batch runs from overwriting
+func modifyDirectories(filename string, id int) string = {
+    fullPath := strings.Split(filename,"/")
+    if len(fullPath) > 1 {
+        base := fullPath[0]
+        remaining := [fullPath[i]| i <- range(1, len(fullPath))]
+        remainingPath := path.Join(remaining)
+        path.Join([fullPath[0], strings.FromInt(id), remainingPath])
+    } else {
+        filename
+    }
+}
+
+// bcl2fastq wrapper. Takes care of the -no-lane-splitting and -batch_runID flags.
+func bcl2fastqRun(samplesheet file, bcl_dir dir) dir = {
+    val demuxed_output = if no_lane_splitting {
+        bcl2fastq_no_split(samplesheet, bcl_dir)
+    } else {
+        bcl2fastq_split(samplesheet, bcl_dir)
+    }
+
+    demuxed_output
+}
+
+// Runs 10x cellranger.
+
+func cellRangerRun(samplesheet file, bcl_dir dir) =
+    exec(image := docker_image, cpu := 32,  mem := 256*GiB) (out dir) {"
+        cellranger mkfastq --localmem=250 --sample-sheet {{samplesheet}} --run {{bcl_dir}} --output-dir {{out}}
+    "}
+
+@requires(cpu := 32, mem := 256*GiB, disk := 4000*GiB)
+val Main = {
+    samplesheet := file(samplesheet)
+    bcl_dir := dir(bcl_path)
+
+    val fastq_output = if cellranger {
+        cellRangerRun(samplesheet, bcl_dir)
+    } else {
+        bcl2fastqRun(samplesheet, bcl_dir)
+    }
+
+    dirs.Copy(fastq_output, output_path)
+}

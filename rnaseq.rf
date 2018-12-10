@@ -30,7 +30,7 @@ val files = make("$/files")
 val dirs = make("$/dirs")
 
 // Local utility file
-val utils = make("../tools/utils.rf")
+val fileutils = make("../tools/fileutils.rf")
 
 // Fastqc
 val fastqc = make("../tools/fastqc.rf")
