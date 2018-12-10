@@ -1,0 +1,15 @@
+
+val dirs = make("$/dirs")
+
+
+// Local utility file
+val fileutils = make("./fileutils.rf")
+
+func ExtractReferenceGenome(reference_bucket, genome string)  = {
+    reference_dir := dir(reference_bucket + genome)
+    val (fasta_gz, _) = dirs.Pick(reference_dir, "*genome.fa.gz")
+    val (gtf_gz, _) = dirs.Pick(reference_dir, "*annotation.gtf.gz")
+    fasta := fileutils.Gunzip(fasta_gz)
+    gtf := fileutils.Gunzip(gtf_gz)
+   {fasta, gtf}
+}

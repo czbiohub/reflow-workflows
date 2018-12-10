@@ -33,3 +33,5 @@ func Align(read1, read2 [file], genomeDir dir) =
             --genomeDir {{genomeDir}} \
             --readFilesIn {{read1}} {{read2}}
     "}
+
+

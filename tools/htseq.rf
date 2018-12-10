@@ -1,0 +1,22 @@
+val dirs = make("$/dirs")
+
+val samtools = make("./samtools.rf")
+
+
+htseq := "quay.io/biocontainers/htseq:0.9.1--py36_0"
+
+
+func Count(byName, gtf file) =
+   exec(image := htseq, mem := GiB) (counts file) {"
+     htseq-count -r name -s no -f bam -m intersection-nonempty {{byName}} {{gtf}} > {{counts}}
+   "}
+
+func CountFromStarOutput(alignment_dir dir, gtf file) = {
+	val (aligned, _) = dirs.Pick(alignment_dir, "*Aligned.out.bam")
+    val sorted = samtools.Sort(aligned)
+    val index = samtools.Index(sorted)
+    val byName = samtools.SortByName(sorted)
+    val counts = Count(byName, gtf)
+
+    counts
+}
