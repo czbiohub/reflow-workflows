@@ -69,12 +69,13 @@ val Main = {
 
     sanitized_genome := strings.Join(strings.Split(genome, "/"), "-")
 
-    output_dir := dirs.Make(["htseq-count.txt": counts,
-        id + "." + sanitized_genome + ".sorted.bam": sorted,
-        id + "." + sanitized_genome +  ".sorted.bam.bai": index,
+    name_prefix := name + "." + sanitized_genome
+    alignment_counts_dir := dirs.Make([name_prefix + ".htseq-count.txt": counts,
+        name_prefix + ".sorted.bam": sorted,
+        name_prefix +  ".sorted.bam.bai": index,
         ])
 
-    output_dirs := [alignment_dir, count_dir] + fastqc_results
+    output_dirs := [alignment_counts_dir] + fastqc_results
 
     [dirs.Copy(d, output) | d <- output_dirs]
 }
