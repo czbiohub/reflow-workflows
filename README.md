@@ -3,6 +3,8 @@
 
 Commonly used bioinformatics pipelines written in [Reflow](https://github.com/grailbio/reflow). Check out our [documentation!](https://reflow-workflows.readthedocs.io/en/latest/).
 
+![Relationship between Aguamenti, Reflow-workflows and Reflow-batches](figures/reflow-workflows_aguamenti_reflow-batches.png)
+
 ## How to run workflows
 
 You'll need to install Golang and [Reflow](https://github.com/grailbio/reflow) if you haven't already.
