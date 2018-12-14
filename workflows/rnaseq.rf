@@ -28,6 +28,7 @@ param (
 // System modules
 val files = make("$/files")
 val dirs = make("$/dirs")
+val strings = make("$/strings")
 
 // Local utility file
 val fileutils = make("../tools/fileutils.rf")
@@ -60,9 +61,18 @@ val Main = {
     val index = star.Index(ref.fasta, ref.gtf)
     val alignment_dir = star.Align(r1, r2, index)
 
-    val counts = htseq.CountFromSTAROutput(alignment_dir, ref.gtf)
+    val (aligned, _) = dirs.Pick(alignment_dir, "*Aligned.out.bam")
+    val sorted = samtools.Sort(aligned)
+    val index = samtools.Index(sorted)
 
-    count_dir := dirs.Make(["htseq-count.txt": counts])
+    val counts = htseq.SortByNameAndCount(sorted, ref.gtf)
+
+    sanitized_genome := strings.Join(strings.Split(genome, "/"), "-")
+
+    output_dir := dirs.Make(["htseq-count.txt": counts,
+        id + "." + sanitized_genome + ".sorted.bam": sorted,
+        id + "." + sanitized_genome +  ".sorted.bam.bai": index,
+        ])
 
     output_dirs := [alignment_dir, count_dir] + fastqc_results
 

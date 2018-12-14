@@ -13,10 +13,8 @@ func Count(byName, gtf file) =
      htseq-count -r name -s no -f bam -m intersection-nonempty {{byName}} {{gtf}} > {{counts}}
    "}
 
-func CountFromSTAROutput(alignment_dir dir, gtf file) = {
-	val (aligned, _) = dirs.Pick(alignment_dir, "*Aligned.out.bam")
-    val sorted = samtools.Sort(aligned)
-    val index = samtools.Index(sorted)
-    val byName = samtools.SortByName(sorted)
+func SortByNameAndCount(bam file, gtf file) = {
+	// Sort by name, then run Count
+    val byName = samtools.SortByName(bam)
     Count(byName, gtf)
 }
