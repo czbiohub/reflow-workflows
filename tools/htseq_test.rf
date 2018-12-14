@@ -1,9 +1,12 @@
-
+val dirs = make("$/dirs")
 val test = make("$/test")
+
+
 val fileutils = make("./fileutils.rf")
 val genomeutils = make("./genomeutils.rf")
 val htseq = make("./htseq.rf")
 val star = make("./star.rf")
+val samtools = make("./samtools.rf")
 
 
 val TestCountFromSTAROutput = {
@@ -16,7 +19,11 @@ val TestCountFromSTAROutput = {
     val index = star.Index(ref.fasta, ref.gtf)
     val alignment_dir = star.Align(r1, r2, index)
 
-    val counts = htseq.CountFromSTAROutput(alignment_dir, ref.gtf)
+    val (aligned, _) = dirs.Pick(alignment_dir, "*Aligned.out.bam")
+    val sorted = samtools.Sort(aligned)
+    val index = samtools.Index(sorted)
+
+    val counts = htseq.SortByNameAndCount(sorted, ref.gtf)
 
     counts := trace(counts)
     fileutils.Header(counts) == fileutils.Echo("ENSMUSG00000000001.4	4\n")
