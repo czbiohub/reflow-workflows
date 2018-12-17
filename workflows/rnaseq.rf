@@ -31,15 +31,15 @@ val dirs = make("$/dirs")
 val strings = make("$/strings")
 
 // Local utility file
-val fileutils = make("../tools/fileutils.rf")
-val genomeutils = make("../tools/genomeutils.rf")
-val stringutils = make("../tools/stringutils.rf")
+val fileutils = make("./../tools/fileutils.rf")
+val genomeutils = make("./../tools/genomeutils.rf")
+val stringutils = make("./../tools/stringutils.rf")
 
 // Fastqc
-val fastqc = make("../tools/fastqc.rf")
-val star = make("../tools/star.rf")
-val samtools = make("../tools/samtools.rf")
-val htseq = make("../tools/htseq.rf")
+val fastqc = make("./../tools/fastqc.rf")
+val star = make("./../tools/star.rf")
+val samtools = make("./../tools/samtools.rf")
+val htseq = make("./../tools/htseq.rf")
 
 
 reference_bucket := if region == "west" {
