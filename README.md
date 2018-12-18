@@ -4,9 +4,6 @@
 Commonly used bioinformatics pipelines written in [Reflow](https://github.com/grailbio/reflow). Check out our [documentation!](https://reflow-workflows.readthedocs.io/en/latest/).
 
 ## How to run workflows
-
-You'll need to install Golang and [Reflow](https://github.com/grailbio/reflow) if you haven't already.
-
 1. Launch an aegea instance with reflow
 
 	Most likely, you'll want to run the workflow and walk away from it. Launch an aegea instance with reflow pre-installed on it. Make sure to change `$USERNAME` to your own AWS username, otherwise `aegea` will complain.
@@ -24,87 +21,18 @@ You'll need to install Golang and [Reflow](https://github.com/grailbio/reflow) i
 
 2. Now ssh into your instance
 
+	We recommend using [iTerm2](https://www.iterm2.com/) for this as the 
+
 	```
 	aegea ssh ubuntu@olgabot-reflow
 	```
 
-3. Launch a screen or tmux window
+	This will automatically launch a `tmux` session with `tmuxinator start reflow`, and should look like this:
 
-	```
-	screen
-	```
-
-	Or:
-
-	```
-	tmux new
-	```
-4. Copy your AWS credentials and public key from your local computer so Reflow knows who you are
-
-	Copy your public key to the instance so that computer can recognize you:
+	![Tmux session with ](images/fresh_instance_tmuxinator_login.png)
 
 
-	```
-	aegea scp ~/.ssh/id_rsa.pub ubuntu@olgabot-reflow:~/.ssh/
-	```
-
-	If you get a `No such file or directory` error, you'll first need to [create a public key](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/) (psst ... I don't use a passphrase )
-
-
-	```
-	scp -r ~/.aws ubuntu@ec2-54-218-96-104.us-west-2.compute.amazonaws.com:~
-	```
-
-5. Test that reflow is installed and sees your AWS credentials:
-
-	Test for installation:
-	```
-	reflow
-	```
-
-	Test for 
-
-	```
-	reflow setup-ec2
-	reflow setup-dynamodb-assoc czbiohub-reflow-quickstart
-	```
-
-	You should see this output:
-
-	```
-	reflow: creating DynamoDB table czbiohub-reflow-quickstart
-	reflow: dynamodb table czbiohub-reflow-quickstart already exists
-	reflow: dynamodb index ID4-ID-index already exists
-	```
-
-	Yay now we're ready to try some reflow workflows!
-
-6. Set your name as the user for Reflow configure.
-	Since the username of the machine is `ubuntu`, we only see `ubuntu@reflow` jobs that get launched by Reflow. This will replace the hostname (e.g. olgabot-reflow) for the username.
-
-	```
-	echo "user: local,$HOST@localhost" >> ~/.reflow/config.yml
-	```
-
-
-5. Get the latest version of aguamenti with `git pull`, then install it
-	
-	```
-	cd aguamenti
-	git pull
-	make conda_install
-	```
-
-6. Clone the private reflow-batches repo, and create a branch for your project
-
-	```
-	# Go to the home directory
-	cd 
-	git clone https://github.com/czbiohub/reflow-batches
-	git checkout -b '$USERNAME'
-	```
-
-7. Create a batch and write it to the reflow-batches
+3. Create a batch and write it to the reflow-batches
 
 	```
 	aguamenti rnaseq-align \
@@ -121,12 +49,43 @@ You'll need to install Golang and [Reflow](https://github.com/grailbio/reflow) i
 		$EXPT_ID $TAXON s3://olgabot-maca/aguamenti-test/
 	```
 
-8. Change to the directory and run the batch!
+4. Change to the directory and run the batch!
 
 	```
-	~/reflow-batches/rnaseq/mus/20181030_FS10000331_12_BNT40322-1214/
-	reflow runbatch
+	cd ~/reflow-batches/rnaseq/mus/20181030_FS10000331_12_BNT40322-1214/
 	```
+
+	There should be both a `samples.csv` and `config.json` file there:
+
+	```
+	➜  20181030_FS10000331_12_BNT40322-1214 git:(master) ll
+	Permissions Size User   Date Modified Git Name
+	.rw-rw-r--    93 ubuntu 18 Dec 17:48   -- config.json
+	.rw-rw-r--   49k ubuntu 18 Dec 17:48   -- samples.csv
+	```
+
+	To run the batch, do `reflow runbatch`!
+
+5. Commit the changes and push to reflow batches ONCE. After this, it will push every hour automatically, but first it needs to store your username and password, which is why you need to enter it this first time
+
+	First, tell git your name and email, otherwise it's assumed to be `ubuntu` which is lame.
+	
+	```
+	git config --global user.name "Rosalind Franklin"
+	git config --global user.email "you@email.com"
+	```
+
+	Now you're ready to push your changes!
+
+	```
+	git add -A .
+	git commit -m "Added mus RNA-seq run for $EXPT_ID"
+	# Get any updated changes before pushing
+	git pull && git push
+	```
+
+To see how this image was built and set up if you want to use some of the info for your own, check out the [czbiohub/packer-images/reflow.json](https://github.com/czbiohub/packer-images/blob/master/reflow.json) recipe and [czbiohub/packer-images/scripts/reflow.sh](https://github.com/czbiohub/packer-images/tree/master/scripts) script.
+
 
 #### On your local computer
 
