@@ -14,7 +14,7 @@ param (
     // if set, run bcl2fastq with --barcode-mismatches 0
     no_mismatches = false
 
-    // if set, run bcl2fastq with --ignore-missing_bcls
+    // if set, run bcl2fastq with --ignore-missing-bcls
     ignore_missing = false
 
     // if set, use 10x cellranger to demux
@@ -62,8 +62,8 @@ func modifyDirectories(filename string, id int) string = {
 
 // run bcl2fastq wrapper with optional flags
 func bcl2fastqRun(samplesheet file, bcl_dir dir) dir = {
-    val lane_split = if no_lane_splitting { "--no-lane_splitting" } else { "" }
-    val mismatches = if no_mismatches { "--barcode_mismatches 0" } else { "" }
+    val lane_split = if no_lane_splitting { "--no-lane-splitting" } else { "" }
+    val mismatches = if no_mismatches { "--barcode-mismatches 0" } else { "" }
     val ignore_miss = if ignore_missing { "--ignore-missing-bcls" } else { "" }
 
     exec(image := docker_image, cpu := 32, mem := 256*GiB, disk := 4000*GiB) (out dir) {"
