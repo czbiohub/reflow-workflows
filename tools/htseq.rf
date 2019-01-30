@@ -76,7 +76,7 @@ htseq := "quay.io/biocontainers/htseq:0.9.1--py36_0"
 // Laboratory (EMBL). (c) 2010. Released under the terms of the GNU General
 // Public License v3. Part of the 'HTSeq' framework, version 0.9.1.
 func Count(byName, gtf file) =
-   exec(image := htseq, mem := GiB, cpu := 8) (counts file) {"
+   exec(image := htseq, mem := GiB, cpu := 16) (counts file) {"
      htseq-count -r name -s no -f bam -m \
      	intersection-nonempty {{byName}} {{gtf}} > {{counts}}
    "}
