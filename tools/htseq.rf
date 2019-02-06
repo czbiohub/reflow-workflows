@@ -78,6 +78,7 @@ htseq := "quay.io/biocontainers/htseq:0.9.1--py36_0"
 func Count(byName, gtf file) =
    exec(image := htseq, mem := GiB, cpu := 16) (counts file) {"
      htseq-count -r name -s no -f bam -m \
+     	--idattr gene_name \
      	intersection-nonempty {{byName}} {{gtf}} > {{counts}}
    "}
 
