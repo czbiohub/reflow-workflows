@@ -8,8 +8,14 @@ param (
     // "s3://bucket/path/to/output"
     output_path string
 
-    // if set, run bcl2fastq with no lane splitting, only applies to bcl2fastq (not 10x)
+    // if set, run bcl2fastq with --no-lane-splitting, only applies to bcl2fastq (not 10x)
     no_lane_splitting = false
+
+    // if set, run bcl2fastq with --barcode-mismatches 0
+    no_mismatches = false
+
+    // if set, run bcl2fastq with --ignore-missing-bcls
+    ignore_missing = false
 
     // if set, use 10x cellranger to demux
     cellranger = false
@@ -40,17 +46,6 @@ val path = make("$/path")
 // --no-lane-splitting
 // --find-adapters-withsliding-window
 
-// Runs bcl2fastq with --no-lane-splitting option.
-func bcl2fastq_no_split(samplesheet file, bcl_dir dir) =
-    exec(image := docker_image, cpu := 32, mem := 256*GiB) (out dir) {"
-        bcl2fastq --no-lane-splitting --sample-sheet {{samplesheet}} -R {{bcl_dir}} -o {{out}}
-    "}
-
-// Runs bcl2fastq with lane splitting.
-func bcl2fastq_split(samplesheet file, bcl_dir dir) =
-    exec(image := docker_image, cpu := 32, mem := 256*GiB) (out dir) {"
-        bcl2fastq --sample-sheet {{samplesheet}} -R {{bcl_dir}} -o {{out}}
-    "}
 
 // Modifies Reports/ and Stats/ paths prevent batch runs from overwriting
 func modifyDirectories(filename string, id int) string = {
@@ -65,15 +60,15 @@ func modifyDirectories(filename string, id int) string = {
     }
 }
 
-// bcl2fastq wrapper. Takes care of the -no-lane-splitting and -batch_runID flags.
+// run bcl2fastq wrapper with optional flags
 func bcl2fastqRun(samplesheet file, bcl_dir dir) dir = {
-    val demuxed_output = if no_lane_splitting {
-        bcl2fastq_no_split(samplesheet, bcl_dir)
-    } else {
-        bcl2fastq_split(samplesheet, bcl_dir)
-    }
+    val lane_split = if no_lane_splitting { "--no-lane-splitting" } else { "" }
+    val mismatches = if no_mismatches { "--barcode-mismatches 0" } else { "" }
+    val ignore_miss = if ignore_missing { "--ignore-missing-bcls" } else { "" }
 
-    demuxed_output
+    exec(image := docker_image, cpu := 32, mem := 256*GiB, disk := 4000*GiB) (out dir) {"
+        bcl2fastq {{lane_split}} {{mismatches}} {{ignore_miss}} --sample-sheet {{samplesheet}} -R {{bcl_dir}} -o {{out}}
+    "}
 }
 
 // Runs 10x cellranger.
