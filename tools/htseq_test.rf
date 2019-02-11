@@ -26,7 +26,7 @@ val TestCountFromSTAROutput = {
     val counts = htseq.SortByNameAndCount(sorted, ref.gtf)
 
     counts := trace(counts)
-    fileutils.Header(counts) == fileutils.Echo("ENSMUSG00000000001.4	4\n")
+    fileutils.Header(counts) == fileutils.Echo("0610005C13Rik	1\n")
 }
 
 
