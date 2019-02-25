@@ -1,0 +1,77 @@
+
+param (
+    // Samples are semicolon-separated, multiple sequencing runs per 
+    // samples are pipe-separated, e.g.:
+    // s1_run1_R1.fastq.gz|s1_run2_R1.fastq.gz;s2_run1_R1.fastq.gz|s2_run2_R1.fastq.gz
+    read1s string
+
+    // Samples are semicolon-separated, multiple sequencing runs per 
+    // samples are pipe-separated, e.g.:
+    // s1_run1_R1.fastq.gz|s1_run2_R1.fastq.gz;s2_run1_R1.fastq.gz|s2_run2_R1.fastq.gz
+    read2s string
+
+    // Semicolon-separated names of samples in read1s, read2s
+    names string
+
+    // Full s3 file location to put the output comparison
+    output string
+
+    // Either "minhash" (sourmash program), "hyperloglog" (dashing program), 
+    // or "truejaccard" for absolute number of overlapping kmers
+    method = "minhash"
+
+    // sketch size = 2**log2_sketch_size 
+    log2_sketch_size = 10
+
+    // Size of kmer to use. For HyperLogLog, only ksizes<=32 are valid
+    ksize = 21
+
+    // GiB of memory for compare 
+    // For > 100 samples, increase
+    memory = 8
+
+    // Number of processes to use for comparison
+    threads = 16
+)
+
+
+val files = make("$/files")
+val strings = make("$/strings")
+val dirs = make("$/dirs")
+
+val dashing = make("./tools/dashing.rf")
+val sourmash = make("./tools/sourmash.rf")
+
+
+func Cat(files [file]) = 
+    exec(image := "ubuntu") (catted file) {"
+        cat {{files}} > {{catted}}
+    "}
+
+
+read1s_split := strings.Split(read1s, "|")
+read2s_split := strings.Split(read2s, "|")
+
+
+// Make a single concatenated reads file for each sample, ignoring R1 R2
+reads := [Cat(flatten([strings.Split(r2, ";"), strings.Split(r2, ";")])) | (r1, r2) <- zip(read1s_split, read2s_split)]
+
+
+val matrix = if method == "minhash" {
+  sourmash.CompareFastqs(reads, names, molecule, log2_sketch_size, ksize, threads)
+  } else if molecule == "protein" {
+      panic("Molecule 'protein' is currently only supported by 'minhash' "+
+        "method, not 'hyperloglog' or 'truejaccard'")
+  } else if method == "hyperloglog" {
+    distance := "dist"
+    dashing.CompareFastqs(reads, names, log2_sketch_size, ksize, threads, distance)
+  } else if method == "truejaccard" {
+    distance := "setdist"
+    dashing.CompareFastqs(reads, names, log2_sketch_size, ksize, threads, distance)
+  } else {
+    panic("Method '" + method + "' is not currenly supported. Please "+ 
+      "use either 'minhash', 'hyperloglog', or 'truejaccard'")
+  }
+
+
+val Main = files.Copy(matrix, output)

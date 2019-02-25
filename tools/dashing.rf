@@ -1,0 +1,164 @@
+
+
+
+val dirs = make("$/dirs")
+
+// dashing Docker image
+dashing := "czbiohub/dashing"
+
+func Sketch(reads file, name string, log2_sketch_size int, 
+        ksize int, threads int) = {
+    d := dirs.Make([name + ".fastq.gz": reads])
+    d := trace(d)
+    outdir := exec(image := dashing, mem := 4*GiB, cpu := threads) (outdir dir) {"
+        cd {{outdir}}
+        dashing sketch \
+            -S {{log2_sketch_size}} \
+            -k {{ksize}} \
+            -p {{threads}} \
+            {{d}}/{{name}}.fastq.gz
+    "}
+    outdir := trace(outdir)
+    val (sketch, _) = dirs.Pick(outdir, "*.hll")
+    sketch
+}
+
+// Estimate distances between sequencing samples
+//
+// Usage: dist <opts> [genomes if not provided from a file with -F]
+// Flags:
+// -h/-?   Usage
+// -k  Set kmer size [31]
+// -W  Cache sketches/use cached sketches
+// -p  Set number of threads [1]
+// -b  Emit distances in binary (default: human-readable, upper-triangular)
+// -U  Emit distances in PHYLIP upper triangular format(default: human-readable, upper-triangular)
+// -s  add a spacer of the format <int>x<int>,<int>x<int>,..., where the first integer corresponds to the space between bases repeated the second integer number of times
+// -w  Set window size [max(size of spaced kmer, [parameter])]
+// -S  Set sketch size [10, for 2**10 bytes each]
+// -H  Treat provided paths as pre-made sketches.
+// -C  Do not canonicalize. [Default: canonicalize]
+// -P  Set prefix for sketch file locations [empty]
+// -x  Set suffix in sketch file names [empty]
+// -o  Output for genome size estimates [stdout]
+// -I  Use Ertl's Improved Estimator
+// -E  Use Ertl's Original Estimator
+// -J  Use Ertl's JMLE Estimator [default  Uses Ertl-MLE]
+// -O  Output for genome distance matrix [stdout]
+// -L  Clamp estimates below expected variance to 0. [Default: do not clamp]
+// -e  Emit in scientific notation
+// -f  Report results as float. (Only important for binary format.) This halves the memory footprint at the cost of precision loss.
+// -F  Get paths to genomes from file rather than positional arguments
+// -M  Emit Mash distance (default: jaccard index)
+// -T  postprocess binary format to human-readable TSV (not upper triangular)
+// -Z  Emit genome sizes (default: jaccard index)
+// -N  Autodetect fastq or fasta data by filename (.fq or .fastq within filename).
+// -y  Filter all input data by count-min sketch.
+// -q  Set count-min number of hashes. Default: [4]
+// -c  Set minimum count for kmers to pass count-min filtering.
+// -t  Set count-min sketch size (log2). Default: ceil(log2(max_filesize)) + 2
+// -R  Set seed for seeds for count-min sketches
+func DistSketches(sketches [file], threads int) =
+    exec(image := dashing, mem := 4*GiB, cpu := threads) (matrix file) {"
+        dashing dist -H -TO {{matrix}} \
+            -p {{threads}} {{sketches}}
+"}
+
+func DistFastqs(fastq_gzs [file], names [string], threads, ksize, log2_sketch_size int) ={
+    // create fastqs with proper names
+    val renamed = [(name+".fastq.gz", f) | (name, f) <- zip(names, fastq_gzs)]
+    val d = dirs.Make(map(renamed))
+
+    exec(image := dashing, mem := 4*GiB, cpu := threads) (matrix file) {"
+        dashing dist \
+            -k {{ksize}} \
+            -S {{log2_sketch_size}} \
+            -TO {{matrix}} \
+            -p {{threads}} {{d}}/*.fastq.gz
+"}
+}
+
+// Get absolute ground truth set size differences between samples
+// 
+// Usage: setdist <opts> [genomes if not provided from a file with -F]
+// Flags:
+// -h/-?   Usage
+// -k  Set kmer size [31]
+// -W  Cache sketches/use cached sketches
+// -p  Set number of threads [1]
+// -b  Emit distances in binary (default: human-readable, upper-triangular)
+// -U  Emit distances in PHYLIP upper triangular format(default: human-readable, upper-triangular)
+// -s  add a spacer of the format <int>x<int>,<int>x<int>,..., where the first integer corresponds to the space between bases repeated the second integer number of times
+// -w  Set window size [max(size of spaced kmer, [parameter])]
+// -S  Set sketch size [10, for 2**10 bytes each]
+// -H  Treat provided paths as pre-made sketches.
+// -C  Do not canonicalize. [Default: canonicalize]
+// -P  Set prefix for sketch file locations [empty]
+// -x  Set suffix in sketch file names [empty]
+// -o  Output for genome size estimates [stdout]
+// -I  Use Ertl's Improved Estimator
+// -E  Use Ertl's Original Estimator
+// -J  Use Ertl's JMLE Estimator [default  Uses Ertl-MLE]
+// -O  Output for genome distance matrix [stdout]
+// -L  Clamp estimates below expected variance to 0. [Default: do not clamp]
+// -e  Emit in scientific notation
+// -f  Report results as float. (Only important for binary format.) This halves the memory footprint at the cost of precision loss.
+// -F  Get paths to genomes from file rather than positional arguments
+// -M  Emit Mash distance (default: jaccard index)
+// -T  postprocess binary format to human-readable TSV (not upper triangular)
+// -Z  Emit genome sizes (default: jaccard index)
+// -N  Autodetect fastq or fasta data by filename (.fq or .fastq within filename).
+// -y  Filter all input data by count-min sketch.
+// -q  Set count-min number of hashes. Default: [4]
+// -c  Set minimum count for kmers to pass count-min filtering.
+// -t  Set count-min sketch size (log2). Default: ceil(log2(max_filesize)) + 2
+// -R  Set seed for seeds for count-min sketches
+func SetDistSketches(sketches [file], threads int) = 
+    exec(image := dashing, mem := 4*GiB, cpu := threads) (matrix file) {"
+        dashing setdist -H -TO {{matrix}} \
+            -p {{threads}} {{sketches}}
+"}
+
+func SetDistSketchesDir(sketches dir, threads int) = 
+    exec(image := dashing, mem := 4*GiB, cpu := threads) (matrix file) {"
+        dashing setdist -H -TO {{matrix}} \
+            -p {{threads}} {{sketches}}
+"}
+
+
+
+func DistSketches(sketches [file], threads int) = 
+    exec(image := dashing, mem := 4*GiB, cpu := threads) (matrix file) {"
+        dashing dist -H -TO {{matrix}} \
+            -p {{threads}} {{sketches}}
+"}
+
+
+func SetDistFastqs(fastq_gzs [file], names [string], 
+        log2_sketch_size, ksize, threads int) = {
+    // create fastqs with proper names
+    val renamed = [(name + ".fastq.gz", f) | (name, f) <- zip(names, fastq_gzs)]
+    val d = dirs.Make(map(renamed))
+
+    exec(image := dashing, mem := 4*GiB, cpu := threads) (matrix file) {"
+        dashing setdist \
+            -k {{ksize}} \
+            -S {{log2_sketch_size}} \
+            -TO {{matrix}} \
+            -p {{threads}} {{d}}/*.fastq.gz
+"}
+}
+
+func CompareFastqs(fastqs [file], names [string], 
+        log2_sketch_size, ksize, threads int, distance string) = {
+    val matrix = if distance == "dist" {
+        sketches := [Sketch(f, n, log2_sketch_size, ksize, threads) | (f, n) <- zip(fastqs, names)]
+        DistSketches(sketches, threads)
+    } else {
+        SetDistFastqs(fastqs, names, threads, ksize, log2_sketch_size)
+    }
+    
+    matrix
+}
+
+
