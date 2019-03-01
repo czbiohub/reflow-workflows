@@ -25,7 +25,7 @@ val dirs = make("$/dirs")
 val files = make("$/files")
 val strings = make("$/strings")
 
-val stringutils = make("../tools/stringutils.rf")
+val stringutils = make("./../tools/stringutils.rf")
 
 
 func SearchSRA(id string) =
