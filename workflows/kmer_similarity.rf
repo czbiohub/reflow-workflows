@@ -17,8 +17,8 @@ param (
     output string
 
     // Either "minhash" (sourmash program), "hyperloglog" (dashing program), 
-    // or "truejaccard" for absolute number of overlapping kmers
-    method = "minhash"
+    // or "exactjaccard" for absolute number of overlapping kmers
+    method = "exactjaccard"
 
     // Whether to compare the sequences on DNA or protein
     molecule = "dna"
